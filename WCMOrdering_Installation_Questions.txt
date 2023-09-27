@@ -1,0 +1,17 @@
+
+
+I developed window service application called WCMOrdering.
+ I install it on my development laptop to runs under local account.
+ Its been tested and works as expected.
+
+Now I need to install it on one of the WCM servers and make sure it will have permissions to
+  - read/write on SBS server file system 
+  - read/write data on dairy_sales database located on SQL server
+  - send Emails (SMPT) - external and internal using Exchange server 
+  - write to windows log
+
+Could you please advice what server is better to install it on and assist on installation and testing.
+
+Also I require assistance in installing and configuring 3rd party OpenAS2 Server Application which will be transmitting messages (files) between WCM and Elior - I've got software and documentation downloaded as advised by Elior technical team member.
+
+

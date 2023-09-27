@@ -1,0 +1,6 @@
+
+C:\Dairy_Sales\WCMOrdering\WCMOrdering\bin\Release
+
+installutil.exe /u WCMOrdering.exe
+
+installutil.exe WCMOrdering.exe

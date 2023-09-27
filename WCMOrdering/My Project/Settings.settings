@@ -1,0 +1,630 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="My" GeneratedClassName="MySettings" UseMySettingsClassName="true">
+  <Profiles />
+  <Settings>
+    <Setting Name="SQLServer" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">WCM-EXE-SQL01</Value>
+    </Setting>
+    <Setting Name="Database" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">dairy_sales</Value>
+    </Setting>
+    <Setting Name="PWD" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">P2P</Value>
+    </Setting>
+    <Setting Name="DBUser" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">P2P</Value>
+    </Setting>
+    <Setting Name="Email_Success" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">orders@wcmilk.co.uk</Value>
+    </Setting>
+    <Setting Name="GLN_WCM" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">5013546152459</Value>
+    </Setting>
+    <Setting Name="OrderTo" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">orders@wcmilk.co.uk</Value>
+    </Setting>
+    <Setting Name="orderfrom" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">orders@wcmilk.co.uk</Value>
+    </Setting>
+    <Setting Name="Email_Error" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">orders@wcmilk.co.uk</Value>
+    </Setting>
+    <Setting Name="GLN_COMPASS" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">5060224840283</Value>
+    </Setting>
+    <Setting Name="TimerInterval" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">100000</Value>
+    </Setting>
+    <Setting Name="WarningInterval_6to10" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">30</Value>
+    </Setting>
+    <Setting Name="WarningInterval_11to18" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">180</Value>
+    </Setting>
+    <Setting Name="WarningInterval_19to5" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">360</Value>
+    </Setting>
+    <Setting Name="WarningInterval_weekend" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">720</Value>
+    </Setting>
+    <Setting Name="Switch_Compass" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">2</Value>
+    </Setting>
+    <Setting Name="GLN_CYPAD" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">5055902800000</Value>
+    </Setting>
+    <Setting Name="CYPAD_IN" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Cypad_Orders\Upload\Order</Value>
+    </Setting>
+    <Setting Name="CYPAD_OUT" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Cypad_Orders\Download\Confirmation</Value>
+    </Setting>
+    <Setting Name="CYPAD_Archive" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Cypad_Orders\Archive</Value>
+    </Setting>
+    <Setting Name="CYPAD_Failed" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Cypad_Orders\Upload\Falied_Orders</Value>
+    </Setting>
+    <Setting Name="CYPAD_IN_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Cypad_Orders\Upload\Order\test</Value>
+    </Setting>
+    <Setting Name="CYPAD_OUT_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Cypad_Orders\Download\Confirmation\test</Value>
+    </Setting>
+    <Setting Name="CYPAD_Archive_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Cypad_Orders\Archive</Value>
+    </Setting>
+    <Setting Name="CYPAD_Failed_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Cypad_Orders\Upload\Falied_Orders</Value>
+    </Setting>
+    <Setting Name="ELIOR_IN" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\P2P_Elior\WAX_ELIOR_PROD\Inbox</Value>
+    </Setting>
+    <Setting Name="ELIOR_OUT" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\P2P_Elior\Upload</Value>
+    </Setting>
+    <Setting Name="ELIOR_Failed" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Elior_Orders\Failed</Value>
+    </Setting>
+    <Setting Name="ELIOR_Archive" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Elior_Orders\Processed</Value>
+    </Setting>
+    <Setting Name="ELIOR_IN_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\P2P_Elior\WAX_ELIOR_STAGE\Inbox</Value>
+    </Setting>
+    <Setting Name="ELIOR_OUT_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\P2P_Elior\Upload_Test</Value>
+    </Setting>
+    <Setting Name="ELIOR_Failed_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Elior_Orders\Failed_test</Value>
+    </Setting>
+    <Setting Name="ELIOR_Archive_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Elior_Orders\Processed_test</Value>
+    </Setting>
+    <Setting Name="BOURNE_IN" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Bourne Leisure Live\orders</Value>
+    </Setting>
+    <Setting Name="BOURNE_Failed" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Bourne Leisure Live\orders\Failed Orders</Value>
+    </Setting>
+    <Setting Name="BOURNE_Archive" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Bourne Leisure Live\orders\Processed Orders</Value>
+    </Setting>
+    <Setting Name="BOURNE_IN_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Bourne Leisure Test\orders</Value>
+    </Setting>
+    <Setting Name="BOURNE_Failed_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Bourne Leisure Test\orders\Failed Orders</Value>
+    </Setting>
+    <Setting Name="BOURNE_Archive_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Bourne Leisure Test\orders\Processed Orders</Value>
+    </Setting>
+    <Setting Name="Switch_Medina" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="MEDINA_IN" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Medina  Live\Orders</Value>
+    </Setting>
+    <Setting Name="MEDINA_Failed" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Medina  Live\Orders\Failed Orders</Value>
+    </Setting>
+    <Setting Name="MEDINA_Archive" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Medina  Live\Orders\Processed Orders</Value>
+    </Setting>
+    <Setting Name="MEDINA_IN_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Medina  Test\Orders</Value>
+    </Setting>
+    <Setting Name="MEDINA_Failed_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Medina  Live\Orders\Failed Orders</Value>
+    </Setting>
+    <Setting Name="MEDINA_Archive_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Medina  Live\Orders\Processed Orders</Value>
+    </Setting>
+    <Setting Name="Switch_FoodBuyOnline" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">2</Value>
+    </Setting>
+    <Setting Name="FoodBuyOnline_IN" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\FoodBuy_Online\ORDERS</Value>
+    </Setting>
+    <Setting Name="FoodBuyOnline_OUT" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\FoodBuy_Online\ORDERS\Responses</Value>
+    </Setting>
+    <Setting Name="FoodBuyOnline_Failed" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\FoodBuy_Online\ORDERS\Failed_Orders</Value>
+    </Setting>
+    <Setting Name="FoodBuyOnline_Archive" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\FoodBuy_Online\ORDERS\Processed_Orders</Value>
+    </Setting>
+    <Setting Name="FoodBuyOnline_IN_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\FoodBuy_Online\ORDERS</Value>
+    </Setting>
+    <Setting Name="FoodBuyOnline_Failed_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\FoodBuy_Online\ORDERS\Failed_Orders</Value>
+    </Setting>
+    <Setting Name="FoodBuyOnline_Archive_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\FoodBuy_Online\ORDERS\Processed_Orders</Value>
+    </Setting>
+    <Setting Name="COMPASS_IN" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Compass FTP Live Area</Value>
+    </Setting>
+    <Setting Name="COMPASS_OUT" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Compass FTP Live Area\Responses</Value>
+    </Setting>
+    <Setting Name="COMPASS_ACKNOWLEDGEMENTS" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Compass FTP Live Area\Aknowlegements</Value>
+    </Setting>
+    <Setting Name="COMPASS_Failed" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Compass FTP Live Area\Failed_Orders</Value>
+    </Setting>
+    <Setting Name="COMPASS_Archive" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Compass FTP Live Area\Processed_Orders</Value>
+    </Setting>
+    <Setting Name="COMPASS_IN_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Compass FTP Test Area</Value>
+    </Setting>
+    <Setting Name="COMPASS_OUT_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Compass FTP Test Area\Responses</Value>
+    </Setting>
+    <Setting Name="COMPASS_Failed_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Compass FTP Test Area\Failed</Value>
+    </Setting>
+    <Setting Name="COMPASS_Archive_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Compass FTP Test Area\Processed</Value>
+    </Setting>
+    <Setting Name="ELIOR_RESPONSE_ARCHIVED" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\P2P_Elior\Upload\Processed_Responses</Value>
+    </Setting>
+    <Setting Name="ELIOR_RESPONSE_ARCHIVED_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\P2P_Elior\Upload_Test\Processed_Responses</Value>
+    </Setting>
+    <Setting Name="Waterfall_Response_archived" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\ELIOR_Waterfall\ORDERS\Responses\Processed</Value>
+    </Setting>
+    <Setting Name="Waterfall_response_archived_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\ELIOR_Waterfall\ORDERS\Responses\Processed</Value>
+    </Setting>
+    <Setting Name="Waterfall_OUT_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\ELIOR_Waterfall\ORDERS\Responses</Value>
+    </Setting>
+    <Setting Name="MEDINA_OUT" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="MEDINA_RESPONSE_ARCHIVED" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="MEDINA_OUT_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="MEDINA_RESPONSE_ARCHIVED_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="COMPASS_RESPONSE_ARCHIVED" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Compass FTP Live Area\Aknowlegements\Processed</Value>
+    </Setting>
+    <Setting Name="COMPASS_ACKNOWLEDGEMENTS_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Compass FTP Test Area\Aknowlegements</Value>
+    </Setting>
+    <Setting Name="COMPASS_RESPONSE_ARCHIVED_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Compass FTP Test Area\Aknowlegements\Processed</Value>
+    </Setting>
+    <Setting Name="CYPAD_RESPONSE_ARCHIVED" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Cypad_Orders\Download\Confirmation\Processed</Value>
+    </Setting>
+    <Setting Name="CYPAD_RESPONSE_ARCHIVED_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Cypad_Orders\Download\Confirmation\Processed</Value>
+    </Setting>
+    <Setting Name="BOURNE_RESPONSE_ARCHIVED" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="BOURNE_RESPONSE_ARCHIVED_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="BOURNE_OUT" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="BOURNE_OUT_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="EmailOrders_IN" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\WCM_Email_orders\Orders</Value>
+    </Setting>
+    <Setting Name="EmailOrders_Archive" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\WCM_Email_orders\Orders\Processed</Value>
+    </Setting>
+    <Setting Name="EmailOrders_Failed" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\WCM_Email_orders\Orders\Failed</Value>
+    </Setting>
+    <Setting Name="EmailOrders_RESPONSE_ARCHIVED" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\WCM_Email_orders\Acknowledgments</Value>
+    </Setting>
+    <Setting Name="EmailOrders_IN_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\WCM_Email_orders_TEST\Orders</Value>
+    </Setting>
+    <Setting Name="EmailOrders_Archive_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\WCM_Email_orders_TEST\Orders\Processed</Value>
+    </Setting>
+    <Setting Name="EmailOrders_Failed_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\WCM_Email_orders_TEST\Orders\Failed</Value>
+    </Setting>
+    <Setting Name="EmailOrders_RESPONSE_ARCHIVED_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\WCM_Email_orders_TEST\Acknowledgments</Value>
+    </Setting>
+    <Setting Name="DN_Grahams_IN" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\WCM_DN\Grahams</Value>
+    </Setting>
+    <Setting Name="DN_Grahams_Archive" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\WCM_DN\Grahams\Processed</Value>
+    </Setting>
+    <Setting Name="DN_Grahams_Failed" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\WCM_DN\Grahams\Failed</Value>
+    </Setting>
+    <Setting Name="POUNDLAND_IN" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\POUNDLAND\</Value>
+    </Setting>
+    <Setting Name="POUNDLAND_OUT" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\POUNDLAND\OUTBOX</Value>
+    </Setting>
+    <Setting Name="POUNDLAND_Failed" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\POUNDLAND\INBOX\Failed</Value>
+    </Setting>
+    <Setting Name="POUNDLAND_Archive" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\POUNDLAND\INBOX\Processed</Value>
+    </Setting>
+    <Setting Name="POUNDLAND_IN_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\POUNDLAND_test\INBOX</Value>
+    </Setting>
+    <Setting Name="POUNDLAND_OUT_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\POUNDLAND_test\OUTBOX</Value>
+    </Setting>
+    <Setting Name="POUNDLAND_Failed_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\POUNDLAND\INBOX\Failed</Value>
+    </Setting>
+    <Setting Name="POUNDLAND_Archived_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\POUNDLAND\INBOX\Processed</Value>
+    </Setting>
+    <Setting Name="POUNDLAND_RESPONSE_Archived" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\POUNDLAND\OUTBOX\Processed</Value>
+    </Setting>
+    <Setting Name="POUNDLAND_RESPONSE_Archived_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\POUNDLAND\OUTBOX\Processed</Value>
+    </Setting>
+    <Setting Name="Switch_Cypad" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">2</Value>
+    </Setting>
+    <Setting Name="Switch_Elior" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="Switch_Bourne" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">2</Value>
+    </Setting>
+    <Setting Name="Switch_EmailOrders" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="Switch_DN_Grahams" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">2</Value>
+    </Setting>
+    <Setting Name="Switch_Poundland" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">2</Value>
+    </Setting>
+    <Setting Name="Switch_DairyData_JN" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="DairyData_JN_OUT" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\DairyData\JNDairies\out</Value>
+    </Setting>
+    <Setting Name="Switch_DairyData_FP" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="DairyData_FP_OUT" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\DairyData\FreshPastures\out</Value>
+    </Setting>
+    <Setting Name="DairyData_FP_OUT_ARCHIVE" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\DairyData\FreshPastures\processed</Value>
+    </Setting>
+    <Setting Name="Switch_DairyData_DHT" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="DairyData_DHT_OUT" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\DairyData\DHT\out</Value>
+    </Setting>
+    <Setting Name="DairyData_DHT_ARCHIVE" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\DairyData\DHT\processed</Value>
+    </Setting>
+    <Setting Name="Switch_AllanReeder" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">2</Value>
+    </Setting>
+    <Setting Name="AllanReeder_OUT" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\AllanReeder_Orders</Value>
+    </Setting>
+    <Setting Name="AllanReeder_ARCHIVE" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\AllanReeder_Orders\Archive</Value>
+    </Setting>
+    <Setting Name="Switch_Medina_TC9" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="MEDINA_TC9_OUT" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\WCM_orderfile\Automated</Value>
+    </Setting>
+    <Setting Name="MEDINA_TC9_SUPPL_ID" Type="System.Int64" Scope="Application">
+      <Value Profile="(Default)">129624393</Value>
+    </Setting>
+    <Setting Name="DairyData_JN_SUPPL_ID" Type="System.Int64" Scope="Application">
+      <Value Profile="(Default)">1994679</Value>
+    </Setting>
+    <Setting Name="DairyData_DHT_SUPPL_ID" Type="System.Int64" Scope="Application">
+      <Value Profile="(Default)">137448846</Value>
+    </Setting>
+    <Setting Name="DairyData_FP_SUPPL_ID" Type="System.Int64" Scope="Application">
+      <Value Profile="(Default)">195275002</Value>
+    </Setting>
+    <Setting Name="AllanReeder_SUPPL_ID" Type="System.Int64" Scope="Application">
+      <Value Profile="(Default)">127695324</Value>
+    </Setting>
+    <Setting Name="DairyData_JN_ARCHIVE" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\DairyData\JNDairies\processed</Value>
+    </Setting>
+    <Setting Name="Paynes_OUT" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Paynes_Orders</Value>
+    </Setting>
+    <Setting Name="Paynes_SUPPL_ID" Type="System.Int64" Scope="Application">
+      <Value Profile="(Default)">240305512</Value>
+    </Setting>
+    <Setting Name="CN_CrunchTime_Archived_Test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Crunchtime!\CaffeNero\Test\Processed</Value>
+    </Setting>
+    <Setting Name="CN_CrunchTime_IN_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Crunchtime!\CaffeNero\Test</Value>
+    </Setting>
+    <Setting Name="CN_CrunchTime_Failed_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Crunchtime!\CaffeNero\Test\Failed</Value>
+    </Setting>
+    <Setting Name="CN_CrunchTime_OUT_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Crunchtime!\CaffeNero\Test\Response</Value>
+    </Setting>
+    <Setting Name="CN_CrunchTime_RESPONSE_Archived_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Crunchtime!\CaffeNero\Test\Response_Archive</Value>
+    </Setting>
+    <Setting Name="CN_CrunchTime_IN" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Crunchtime!\CaffeNero</Value>
+    </Setting>
+    <Setting Name="CN_CrunchTime_Archive" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Crunchtime!\CaffeNero\Processed</Value>
+    </Setting>
+    <Setting Name="CN_CrunchTime_Failed" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Crunchtime!\CaffeNero\Failed</Value>
+    </Setting>
+    <Setting Name="CN_CrunchTime_OUT" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Crunchtime!\CaffeNero\Response</Value>
+    </Setting>
+    <Setting Name="CN_CrunchTime_RESPONSE_Archived" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Crunchtime!\CaffeNero\Response_Archive</Value>
+    </Setting>
+    <Setting Name="AllanReeder_Summary_Email" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">HeidiReeder@allanreederltd.co.uk;frances@allanreederltd.co.uk;Info@allanreederltd.co.uk</Value>
+    </Setting>
+    <Setting Name="Switch_CN_CrunchTime" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">1</Value>
+    </Setting>
+    <Setting Name="Switch_ZUPA" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">1</Value>
+    </Setting>
+    <Setting Name="ZUPA_IN" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Zupa_Caternet\ORDER_IN</Value>
+    </Setting>
+    <Setting Name="ZUPA_OUT" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Zupa_Caternet\INVOICE_OUT\ORDER_RESPONSE</Value>
+    </Setting>
+    <Setting Name="ZUPA_Failed" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Zupa_Caternet\ORDER_Failed</Value>
+    </Setting>
+    <Setting Name="ZUPA_Archive" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Zupa_Caternet\ORDER_Processed</Value>
+    </Setting>
+    <Setting Name="ZUPA_IN_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Zupa_Caternet_Test\ORDER_IN</Value>
+    </Setting>
+    <Setting Name="ZUPA_OUT_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Zupa_Caternet_Test\INVOICE_OUT\ORDER_RESPONSE</Value>
+    </Setting>
+    <Setting Name="ZUPA_Failed_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Zupa_Caternet_test\ORDER_Failed</Value>
+    </Setting>
+    <Setting Name="ZUPA_Archive_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Zupa_Caternet_test\ORDER_IN\ORDER_Processed</Value>
+    </Setting>
+    <Setting Name="ZUPA_RESPONSE_ARCHIVED" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Zupa_Caternet\ORDER_RESPONSE_ARCHIVED</Value>
+    </Setting>
+    <Setting Name="ZUPA_RESPONSE_ARCHIVED_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Zupa_Caternet_test\ORDER_RESPONSE_ARCHIVED</Value>
+    </Setting>
+    <Setting Name="Switch_Johal" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">2</Value>
+    </Setting>
+    <Setting Name="Johal_OUT" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Johal_Orders</Value>
+    </Setting>
+    <Setting Name="Johal_ARCHIVE" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Johal_Orders\Archive</Value>
+    </Setting>
+    <Setting Name="Johal_SUPPL_ID" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">1188</Value>
+    </Setting>
+    <Setting Name="Switch_PushEmailP2P" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">2</Value>
+    </Setting>
+    <Setting Name="Switch_PushEmailWebApp" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">2</Value>
+    </Setting>
+    <Setting Name="GLN_INTERSERVE" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">5060642190021</Value>
+    </Setting>
+    <Setting Name="INTERSERVE_IN_SAFFRON" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\INTERSERVE\ORDER_IN_SAFFRON</Value>
+    </Setting>
+    <Setting Name="INTERSERVE_Failed_SAFFRON" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\INTERSERVE\ORDER_IN_SAFFRON\Failed</Value>
+    </Setting>
+    <Setting Name="INTERSERVE_Archive_SAFFRON" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\INTERSERVE\ORDER_IN_SAFFRON\Processed</Value>
+    </Setting>
+    <Setting Name="INTERSERVE_IN_test_SAFFRON" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\INTERSERVE\ORDER_IN_TEST_SAFFRON</Value>
+    </Setting>
+    <Setting Name="INTERSERVE_Failed_test_SAFFRON" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\INTERSERVE\ORDER_IN_TEST_SAFFRON\Failed</Value>
+    </Setting>
+    <Setting Name="INTERSERVE_Archive_test_SAFFRON" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\INTERSERVE\ORDER_IN_TEST_SAFFRON\Processed</Value>
+    </Setting>
+    <Setting Name="INTERSERVE_OUT_SAFFRON" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\INTERSERVE\ASN_SAFFRON</Value>
+    </Setting>
+    <Setting Name="INTERSERVE_RESPONSE_ARCHIVED_SAFFRON" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\INTERSERVE\ASN_SAFFRON\Processed</Value>
+    </Setting>
+    <Setting Name="INTERSERVE_OUT_test_SAFFRON" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\INTERSERVE\ASN_Test_SAFFRON</Value>
+    </Setting>
+    <Setting Name="INTERSERVE_RESPONSE_ARCHIVED_test_SAFFRON" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\INTERSERVE\ASN_Test_SAFFRON\Processed</Value>
+    </Setting>
+    <Setting Name="Switch_Interserve_Saffron" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">1</Value>
+    </Setting>
+    <Setting Name="Switch_McColls" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="MCCOLLS_IN" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\McColls\ORDER_IN</Value>
+    </Setting>
+    <Setting Name="MCCOLLS_Archive" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\McColls\ORDER_IN\Processed</Value>
+    </Setting>
+    <Setting Name="MCCOLLS_Failed" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\McColls\ORDER_IN\Failed</Value>
+    </Setting>
+    <Setting Name="MCCOLLS_OUT" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="MCCOLLS_RESPONSE_ARCHIVED" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="MCCOLLS_RESPONSE_EMAIL" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">orders@mccolls.co.uk                         </Value>
+    </Setting>
+    <Setting Name="MCCOLLS_RESPONSE_EMAIL_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">CSkellern@mccolls.co.uk</Value>
+    </Setting>
+    <Setting Name="Switch_Weezy" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">2</Value>
+    </Setting>
+    <Setting Name="WEEZY_Archive" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\WeezyOrders\Processed</Value>
+    </Setting>
+    <Setting Name="WEEZY_Failed" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\WeezyOrders\Failed</Value>
+    </Setting>
+    <Setting Name="WEEZY_OUT" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="WEEZY_IN" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\WeezyOrders</Value>
+    </Setting>
+    <Setting Name="Broadland_SUPPL_ID" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">118867089</Value>
+    </Setting>
+    <Setting Name="Broadland_OUT" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Broadland_Orders</Value>
+    </Setting>
+    <Setting Name="Switch_Broadland" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">2</Value>
+    </Setting>
+    <Setting Name="Switch_Paynes" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">2</Value>
+    </Setting>
+    <Setting Name="Paynes_Archived" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Paynes_Orders\Archive</Value>
+    </Setting>
+    <Setting Name="Switch_Chew_Valley" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">1</Value>
+    </Setting>
+    <Setting Name="Chew_Valley_OUT" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Chew_valley_Orders</Value>
+    </Setting>
+    <Setting Name="Chew_Valley_SUPPL_ID" Type="System.Decimal" Scope="Application">
+      <Value Profile="(Default)">224513559</Value>
+    </Setting>
+    <Setting Name="Switch_JJWilson" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">1</Value>
+    </Setting>
+    <Setting Name="JJWilson_Orders" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\JJWilson_Orders</Value>
+    </Setting>
+    <Setting Name="JJWilson_Archived" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\JJWilson_Orders\Archived</Value>
+    </Setting>
+    <Setting Name="JJWilson_Email" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">service@jjwilsonltd.com</Value>
+    </Setting>
+    <Setting Name="Switch_DairyData_Medina" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">1</Value>
+    </Setting>
+    <Setting Name="DairyData_Medina_OUT" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Medina  Live\Orders Out</Value>
+    </Setting>
+    <Setting Name="DairyData_Medina_SUPPL_ID" Type="System.Decimal" Scope="Application">
+      <Value Profile="(Default)">227428838</Value>
+    </Setting>
+    <Setting Name="DairyData_Medina_OUT_test" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Medina  Test\Orders Out</Value>
+    </Setting>
+    <Setting Name="Grahams_OUT" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Grahamsdairies\Live\ORDERS</Value>
+    </Setting>
+    <Setting Name="Grahams_ARCHIVE" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Grahamsdairies\Live\ORDERS\Processed</Value>
+    </Setting>
+    <Setting Name="Grahams_SUPPL_ID" Type="System.Decimal" Scope="Application">
+      <Value Profile="(Default)">1158</Value>
+    </Setting>
+    <Setting Name="Switch_Grahams" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">1</Value>
+    </Setting>
+    <Setting Name="Switch_DairyData_MillsMilk" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="MillsMilk_SUPPL_ID" Type="System.Decimal" Scope="Application">
+      <Value Profile="(Default)">226047140</Value>
+    </Setting>
+    <Setting Name="DairyData_MillsMilk_OUT" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\DairyData\MillsMilk</Value>
+    </Setting>
+    <Setting Name="DairyData_MillsMilk_Archive" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\DairyData\MillsMilk\Archive</Value>
+    </Setting>
+    <Setting Name="Johal_Order_Email" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">edi@johaldairies.co.uk</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>

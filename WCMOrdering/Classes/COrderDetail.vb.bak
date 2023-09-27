@@ -1,0 +1,199 @@
+﻿Public Class COrderDetail
+
+    Private mParent As COrderHeader
+    Private mnId As Integer
+    Public Property TS As Byte()
+
+    Public Property ProductId As Integer
+    Public Property ProductCode As String
+    Public Property ProductCode_Supplier As String = String.Empty
+    Public Property ProductCode_Branded As String = String.Empty
+    Public Property Product_Supplier As String = String.Empty
+    Public Property Product_Branded As String = String.Empty
+    Public Property Product As String
+    Public Property UnitPrice As Decimal = 0
+
+    Private Property _IsProduce As Boolean
+
+    Private Property _SupplyingDepotID As Long = 0
+
+    Private mdQty As Decimal
+	Private mdSOQty As Decimal ' quantity from standing order
+    Public Property _QtyDelivered As Decimal? = Nothing
+    'used for standing order
+    Private mdSun As Decimal
+    Private mdMon As Decimal
+    Private mdTue As Decimal
+    Private mdWed As Decimal
+    Private mdThu As Decimal
+    Private mdFri As Decimal
+    Private mdSat As Decimal
+
+    Public Sub New(ByVal Parent As COrderHeader, ByVal nId As Integer, ByVal bytTS As Byte())
+        mParent = Parent
+        mnId = nId
+        TS = bytTS
+        ProductId = 0
+        mdQty = 0
+        mdSOQty = 0
+    End Sub
+
+    Public Sub New(ByVal Parent As COrderHeader, ByVal nId As Integer, ByVal bytTS As Byte(), ByVal nProductId As Integer, ByVal dQty As Decimal, ByVal dSOQty As Decimal)
+        mParent = Parent
+        mnId = nId
+        TS = bytTS
+        ProductId = nProductId
+        mdQty = dQty
+        mdSOQty = dSOQty
+    End Sub
+
+    Public Sub New(ByVal Parent As COrderHeader, ByVal nId As Integer, ByVal bytTS As Byte(), ByVal nProductId As Integer, ByVal dQty As Decimal, ByVal dSOQty As Decimal,
+                   ByVal strCode As String, ByVal strProduct As String)
+        mParent = Parent
+        mnId = nId
+        TS = bytTS
+        ProductId = nProductId
+        mdQty = dQty
+        mdSOQty = dSOQty
+        ProductCode = strCode
+        Product = strProduct
+    End Sub
+
+    Public Sub New(ByVal Parent As COrderHeader, ByVal nId As Integer, ByVal bytTS As Byte(), ByVal nProductId As Integer, ByVal strCode As String, ByVal strProduct As String,
+                   ByVal dSun As Decimal, ByVal dMon As Decimal, ByVal dTue As Decimal, ByVal dWed As Decimal, ByVal dThu As Decimal, ByVal dFri As Decimal, ByVal dSat As Decimal)
+        mParent = Parent
+        mnId = nId
+        TS = bytTS
+        ProductId = nProductId
+        ProductCode = strCode
+        Product = strProduct
+        mdSun = dSun
+        mdMon = dMon
+        mdTue = dTue
+        mdWed = dWed
+        mdThu = dThu
+        mdFri = dFri
+        mdSat = dSat
+    End Sub
+    Public Property Parent() As COrderHeader
+        Get
+            Return mParent
+        End Get
+        Set(ByVal value As COrderHeader)
+            mParent = value
+        End Set
+    End Property
+
+    Public Property ID() As Integer
+        Get
+            Return mnId
+        End Get
+        Set(ByVal value As Integer)
+            mnId = value
+        End Set
+    End Property
+
+    'add to WCMOrdering
+    Public Property IsProduce() As Boolean
+        Get
+            Return _IsProduce
+        End Get
+        Set(ByVal value As Boolean)
+            _IsProduce = value
+        End Set
+    End Property
+    'add to WCMOrdering
+    Public Property SupplyingDepotID() As Long
+        Get
+            Return _SupplyingDepotID
+        End Get
+        Set(ByVal value As Long)
+            _SupplyingDepotID = value
+        End Set
+    End Property
+
+    Public Property Qty() As Decimal
+        Get
+            Return mdQty
+        End Get
+        Set(ByVal value As Decimal)
+            mdQty = value
+        End Set
+    End Property
+
+    'Quantity on standing order - used for the amendments
+    Public Property SOQty() As Decimal
+        Get
+            Return mdSOQty
+        End Get
+        Set(ByVal value As Decimal)
+            mdSOQty = value
+        End Set
+    End Property
+
+    'Used for standing orders:
+    Public Property Sun() As Decimal
+        Get
+            Return mdSun
+        End Get
+        Set(ByVal value As Decimal)
+            mdSun = value
+        End Set
+    End Property
+    Public Property Mon() As Decimal
+        Get
+            Return mdMon
+        End Get
+        Set(ByVal value As Decimal)
+            mdMon = value
+        End Set
+    End Property
+    Public Property Tue() As Decimal
+        Get
+            Return mdTue
+        End Get
+        Set(ByVal value As Decimal)
+            mdTue = value
+        End Set
+    End Property
+    Public Property Wed() As Decimal
+        Get
+            Return mdWed
+        End Get
+        Set(ByVal value As Decimal)
+            mdWed = value
+        End Set
+    End Property
+    Public Property Thu() As Decimal
+        Get
+            Return mdThu
+        End Get
+        Set(ByVal value As Decimal)
+            mdThu = value
+        End Set
+    End Property
+    Public Property Fri() As Decimal
+        Get
+            Return mdFri
+        End Get
+        Set(ByVal value As Decimal)
+            mdFri = value
+        End Set
+    End Property
+    Public Property Sat() As Decimal
+        Get
+            Return mdSat
+        End Get
+        Set(ByVal value As Decimal)
+            mdSat = value
+        End Set
+    End Property
+    Public Property QtyDelivered() As Decimal?
+        Get
+            Return _QtyDelivered
+        End Get
+        Set(ByVal value As Decimal?)
+            _QtyDelivered = value
+        End Set
+    End Property
+End Class
