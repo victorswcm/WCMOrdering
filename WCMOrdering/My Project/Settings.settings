@@ -567,7 +567,7 @@
       <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Paynes_Orders\Archive</Value>
     </Setting>
     <Setting Name="Switch_Chew_Valley" Type="System.Int32" Scope="Application">
-      <Value Profile="(Default)">1</Value>
+      <Value Profile="(Default)">0</Value>
     </Setting>
     <Setting Name="Chew_Valley_OUT" Type="System.String" Scope="Application">
       <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Chew_valley_Orders</Value>
@@ -609,7 +609,7 @@
       <Value Profile="(Default)">1158</Value>
     </Setting>
     <Setting Name="Switch_Grahams" Type="System.Int32" Scope="Application">
-      <Value Profile="(Default)">1</Value>
+      <Value Profile="(Default)">2</Value>
     </Setting>
     <Setting Name="Switch_DairyData_MillsMilk" Type="System.Int32" Scope="Application">
       <Value Profile="(Default)">0</Value>
