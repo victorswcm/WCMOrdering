@@ -110,6 +110,11 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Application.myapp</DependentUpon>
     </Compile>
+    <Compile Include="My Project\Settings1.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
     <Compile Include="ProjectInstaller.Designer.vb">
       <DependentUpon>ProjectInstaller.vb</DependentUpon>
     </Compile>
@@ -162,8 +167,8 @@
     <None Include="My Project\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <CustomToolNamespace>My</CustomToolNamespace>
-      <LastGenOutput>Settings.Designer.vb</LastGenOutput>
       <SubType>Designer</SubType>
+      <LastGenOutput>Settings1.Designer.vb</LastGenOutput>
     </None>
   </ItemGroup>
   <ItemGroup>
