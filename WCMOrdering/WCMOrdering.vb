@@ -35,7 +35,6 @@ Public Class WCMOrdering
     Private Property _eventId_Order_Upload As Integer = 101     'not required as this is not the order upload
 
     Public Shared _Test_Mode As Boolean = False
-
     Private Property _OrderRequestId As Integer
     Private Property _AccNum As String
     Private Property _VendorID As String
@@ -112,8 +111,9 @@ Public Class WCMOrdering
     Private _Order_Alert_OfficeDrop_done As Date = "2020-01-01"
     Private _JJWilson_done As Date = "2020-01-01"
     Private _BR003_reminder_done As Date = "2020-01-01"
+    Private _Saffron_ASN_done As Date = "2020-01-01"
 
-    Private _TC9_Medina_done As Boolean = False
+
     '-----------------
 
     'FOLDERS for orders and responses/acknowlegements and also deliveries ( grahams for now)
@@ -321,9 +321,17 @@ Public Class WCMOrdering
 
                 If GetSetting_Interserve_saffron() Then
                     Process_Interserve()
+
+                    'process Saffron ASN for Standing Orders (sub-buying group Debra)
+                    If DateDiff(DateInterval.Day, _Saffron_ASN_done, Now.Date) > 0 Then
+                        If Date.Now.Hour = 19 AndAlso (Date.Now.Minute > 30 AndAlso Date.Now.Minute < 35) Then
+                            Process_Saffron_ASN()
+                            _Saffron_ASN_done = Now.Date
+                        End If
+                    End If
                 End If
 
-                If GetSetting_DN_Grahams() Then
+                    If GetSetting_DN_Grahams() Then
                     Process_DN_Grahams()
                 End If
 
@@ -2847,19 +2855,16 @@ Public Class WCMOrdering
             cmd.Dispose()
             l_DB.Close()
 
-            dt = GetOrderLines()
+            '' dt = GetOrderLines()
 
             Select Case lRetVal
                 Case 0 ' Success
-                    ''If _Status = "MODIFIED_LINES" Then
-                    ''    _Status = "MODIFIED"
-                    ''End If
 
                     If _Status.StartsWith("MODIFIED") Then
-                        If CreateOrderResponse_Bourne(2, dt, lRetVal, "", lResponseMsg) Then
-                            MyEventLog.WriteEntry("Order Processed: " & _Status & " " & _OrderNum & " {" & _OrderRequestId & "} for " & _AccNum, EventLogEntryType.Information, GetEventID)
-                            _EmailServiceMessage(Date.Now & " ORDER Processed: " & _Status & " " & _OrderNum & " {" & _OrderRequestId & "} for " & _AccNum & vbNewLine & vbNewLine & lResponseMsg)
-                        End If
+                        ''     If CreateOrderResponse_Bourne(2, dt, lRetVal, "", lResponseMsg) Then
+                        MyEventLog.WriteEntry("Order Processed: " & _Status & " " & _OrderNum & " {" & _OrderRequestId & "} for " & _AccNum, EventLogEntryType.Information, GetEventID)
+                        _EmailServiceMessage(Date.Now & " ORDER Processed: " & _Status & " " & _OrderNum & " {" & _OrderRequestId & "} for " & _AccNum & vbNewLine & vbNewLine & lResponseMsg)
+                        ''       End If
                     End If
                     System.Threading.Thread.Sleep(50)
                     EmailOrder(lNewOrderID)
@@ -2867,10 +2872,10 @@ Public Class WCMOrdering
                 Case Else
                     _Status = "REJECTED"
                     If lErrMsg = "CUSTOMER_IDENTIFICATION_NUMBER_IS_INVALID" Then lErrMsg = " SUSPENDED ACCOUNT "
-                    If CreateOrderResponse_Bourne(2, dt, lRetVal, lErrMsg, lResponseMsg) Then
-                        _EmailServiceMessage(Date.Now & " ORDER REJECTED: " & _OrderNum & " {" & _OrderRequestId & "} for " & _AccNum & lErrMsg & vbNewLine & vbNewLine & lResponseMsg)
-                        System.Threading.Thread.Sleep(50)
-                    End If
+                    '' If CreateOrderResponse_Bourne(2, dt, lRetVal, lErrMsg, lResponseMsg) Then
+                    _EmailServiceMessage(Date.Now & " ORDER REJECTED: " & _OrderNum & " {" & _OrderRequestId & "} for " & _AccNum & lErrMsg & vbNewLine & vbNewLine & lResponseMsg)
+                    System.Threading.Thread.Sleep(50)
+                    ''  End If
                     MyEventLog.WriteEntry("Order REJECTED: " & _OrderNum & " {" & _OrderRequestId & "} for " & _AccNum & lErrMsg & vbNewLine & lResponseMsg, EventLogEntryType.Warning, GetEventID)
             End Select
 
@@ -2886,137 +2891,137 @@ Public Class WCMOrdering
         Return MsgBoxResult.Abort
     End Function
 
-    ''' <summary>
-    ''' 
-    ''' </summary>
-    ''' <param name="pOrderResponseType">1=Acknowledgement, 2=order confirmation, 3=order ASN</param>
-    ''' <returns></returns>
-    ''' <remarks> </remarks>
-    Private Function CreateOrderResponse_Bourne(pOrderResponseType As Integer, dtLines As DataTable, pErrCode As Integer, pErrMsg As String, ByRef pResponse As String) As Boolean
-        Dim xmlWriter As XmlWriter = Nothing
-        Dim dtProcessDate As Date = Now
-        Dim l_Directory As String = ""
-        Dim l_File_UPL As String = "", l_File_CON As String = ""
-        ' Dim row As DataRow
+    '''' <summary>
+    '''' 
+    '''' </summary>
+    '''' <param name="pOrderResponseType">1=Acknowledgement, 2=order confirmation, 3=order ASN</param>
+    '''' <returns></returns>
+    '''' <remarks> </remarks>
+    'Private Function CreateOrderResponse_Bourne(pOrderResponseType As Integer, dtLines As DataTable, pErrCode As Integer, pErrMsg As String, ByRef pResponse As String) As Boolean
+    '    Dim xmlWriter As XmlWriter = Nothing
+    '    Dim dtProcessDate As Date = Now
+    '    Dim l_Directory As String = ""
+    '    Dim l_File_UPL As String = "", l_File_CON As String = ""
+    '    ' Dim row As DataRow
 
-        Try
-            'Select Case pOrderResponseType
-            '    Case 2
-            '        l_File_UPL = "UPL--" & _OrderGuid & "--" & _Order_DateTime_Created & ".XML"
-            '        l_File_CON = "CON--" & _OrderGuid & "--" & _Order_DateTime_Created & ".XML"
-            '        ''Case 3 :
-            'End Select
+    '    Try
+    '        'Select Case pOrderResponseType
+    '        '    Case 2
+    '        '        l_File_UPL = "UPL--" & _OrderGuid & "--" & _Order_DateTime_Created & ".XML"
+    '        '        l_File_CON = "CON--" & _OrderGuid & "--" & _Order_DateTime_Created & ".XML"
+    '        '        ''Case 3 :
+    '        'End Select
 
-            'If File.Exists(_RESPONSE_OUT & "\" & l_File_UPL) Then File.Delete(_RESPONSE_OUT & "\" & l_File_UPL)
-            'If File.Exists(_RESPONSE_OUT & "\" & l_File_CON) Then File.Delete(_RESPONSE_OUT & "\" & l_File_CON)
+    '        'If File.Exists(_RESPONSE_OUT & "\" & l_File_UPL) Then File.Delete(_RESPONSE_OUT & "\" & l_File_UPL)
+    '        'If File.Exists(_RESPONSE_OUT & "\" & l_File_CON) Then File.Delete(_RESPONSE_OUT & "\" & l_File_CON)
 
-            'xmlWriter = New XmlTextWriter(_RESPONSE_OUT & "\" & l_File_UPL, System.Text.Encoding.UTF8)
+    '        'xmlWriter = New XmlTextWriter(_RESPONSE_OUT & "\" & l_File_UPL, System.Text.Encoding.UTF8)
 
-            'If IsNothing(xmlWriter) Then
-            '    Return False
-            'End If
+    '        'If IsNothing(xmlWriter) Then
+    '        '    Return False
+    '        'End If
 
-            'With xmlWriter
-            '    .WriteStartDocument()
-            '    .WriteStartElement("orderConfirmation")
+    '        'With xmlWriter
+    '        '    .WriteStartDocument()
+    '        '    .WriteStartElement("orderConfirmation")
 
-            '    .WriteStartElement("header")
+    '        '    .WriteStartElement("header")
 
-            '    .WriteStartElement("testStatus")
-            '    .WriteString(If(My.Settings.TestCypad, "Y", "N"))
-            '    .WriteEndElement()
+    '        '    .WriteStartElement("testStatus")
+    '        '    .WriteString(If(My.Settings.TestCypad, "Y", "N"))
+    '        '    .WriteEndElement()
 
-            '    .WriteStartElement("purchaseOrderReference") : .WriteString(_OrderNum) : .WriteEndElement()
-            '    .WriteStartElement("purchaseOrderDate") : .WriteString(_Order_DateTime_Created.Replace("-", "")) : .WriteEndElement()
+    '        '    .WriteStartElement("purchaseOrderReference") : .WriteString(_OrderNum) : .WriteEndElement()
+    '        '    .WriteStartElement("purchaseOrderDate") : .WriteString(_Order_DateTime_Created.Replace("-", "")) : .WriteEndElement()
 
-            '    .WriteStartElement("orderStatus") : .WriteString(_Status) : .WriteEndElement() ' ACCEPTED, REJECTED, MODIFIED
+    '        '    .WriteStartElement("orderStatus") : .WriteString(_Status) : .WriteEndElement() ' ACCEPTED, REJECTED, MODIFIED
 
-            '    .WriteStartElement("orderStatusReason")
-            If _Status.Equals("REJECTED", StringComparison.CurrentCultureIgnoreCase) Then
-                Select Case pErrCode
-                    ' 1=Customer account on stop; 2=Customer account is not recognised; 3=Delivery date changed
-                    Case 4
-                        pResponse &= "DUPLICATE_ORDER" ' added by VS on 13/07/2020
-                    Case 6 ' 'CUSTOMER_IDENTIFICATION_NUMBER_DOES_NOT_EXIST'
-                        pResponse &= "CUSTOMER_IDENTIFICATION_NUMBER_DOES_NOT_EXIST" & vbNewLine
-                    Case 7 'DELIVERY_SLOT_MISSED'
-                        pResponse &= "DELIVERY_SLOT_MISSED" & vbNewLine
-                    Case 8 'PRODUCT_NOT_VALID_FOR_LOCATION'
-                        pResponse &= "PRODUCT_NOT_VALID_FOR_LOCATION" & vbNewLine
-                    Case 9 'DELIVERY_SLOT_UNCLEAR
-                        pResponse &= "DELIVERY_SLOT_UNCLEAR: RING CUSTOMER TO CHECK REQUIRED DELIVERY DATE" & vbNewLine
-                End Select
-            ElseIf _Status.Equals("MODIFIED", StringComparison.CurrentCultureIgnoreCase) Then
-                If DateDiff(DateInterval.Day, _DeliveryDateRequested, _DeliveryDate) <> 0 Then
-                    pResponse &= "DELIVERY_DATE_CHANGED" & vbNewLine
-                    pResponse &= "Confirmed Delivery Date :"
-                    If IsDate(_DeliveryDate) AndAlso _DeliveryDate <> Date.MinValue Then
-                        pResponse &= (CType(_DeliveryDate, Date).ToString("ddd dd/MM/yyyy")) & vbNewLine
-                    ElseIf _DeliveryDate <> Date.MinValue Then
-                        pResponse &= _DeliveryDate & vbNewLine
-                    End If
-                End If
-            ElseIf _Status.Equals("MODIFIED_LINES", StringComparison.CurrentCultureIgnoreCase) Then
-                pResponse &= "ORDER ITEMS MODIFIED" & vbNewLine
-            End If
+    '        '    .WriteStartElement("orderStatusReason")
+    '        If _Status.Equals("REJECTED", StringComparison.CurrentCultureIgnoreCase) Then
+    '            Select Case pErrCode
+    '                ' 1=Customer account on stop; 2=Customer account is not recognised; 3=Delivery date changed
+    '                Case 4
+    '                    pResponse &= "DUPLICATE_ORDER" ' added by VS on 13/07/2020
+    '                Case 6 ' 'CUSTOMER_IDENTIFICATION_NUMBER_DOES_NOT_EXIST'
+    '                    pResponse &= "CUSTOMER_IDENTIFICATION_NUMBER_DOES_NOT_EXIST" & vbNewLine
+    '                Case 7 'DELIVERY_SLOT_MISSED'
+    '                    pResponse &= "DELIVERY_SLOT_MISSED" & vbNewLine
+    '                Case 8 'PRODUCT_NOT_VALID_FOR_LOCATION'
+    '                    pResponse &= "PRODUCT_NOT_VALID_FOR_LOCATION" & vbNewLine
+    '                Case 9 'DELIVERY_SLOT_UNCLEAR
+    '                    pResponse &= "DELIVERY_SLOT_UNCLEAR: RING CUSTOMER TO CHECK REQUIRED DELIVERY DATE" & vbNewLine
+    '            End Select
+    '        ElseIf _Status.Equals("MODIFIED", StringComparison.CurrentCultureIgnoreCase) Then
+    '            If DateDiff(DateInterval.Day, _DeliveryDateRequested, _DeliveryDate) <> 0 Then
+    '                pResponse &= "DELIVERY_DATE_CHANGED" & vbNewLine
+    '                pResponse &= "Confirmed Delivery Date :"
+    '                If IsDate(_DeliveryDate) AndAlso _DeliveryDate <> Date.MinValue Then
+    '                    pResponse &= (CType(_DeliveryDate, Date).ToString("ddd dd/MM/yyyy")) & vbNewLine
+    '                ElseIf _DeliveryDate <> Date.MinValue Then
+    '                    pResponse &= _DeliveryDate & vbNewLine
+    '                End If
+    '            End If
+    '        ElseIf _Status.Equals("MODIFIED_LINES", StringComparison.CurrentCultureIgnoreCase) Then
+    '            pResponse &= "ORDER ITEMS MODIFIED" & vbNewLine
+    '        End If
 
-            ' ''in modified order confirmation the only modified (or rejected) items get included 
-            ''If dtLines IsNot Nothing Then
-            ''    pResponse &= "Order Items" & vbNewLine
-            ''    Dim lItemStatus As String, lReason As String
-            ''    For Each row In dtLines.Rows
-            ''        If row("Product_Code_Requested") <> row("Product_Code") Then
-            ''            .WriteStartElement("item")
+    '        ' ''in modified order confirmation the only modified (or rejected) items get included 
+    '        ''If dtLines IsNot Nothing Then
+    '        ''    pResponse &= "Order Items" & vbNewLine
+    '        ''    Dim lItemStatus As String, lReason As String
+    '        ''    For Each row In dtLines.Rows
+    '        ''        If row("Product_Code_Requested") <> row("Product_Code") Then
+    '        ''            .WriteStartElement("item")
 
-            ''            .WriteStartElement("itemCode")
-            ''            .WriteString(row("Product_Code_Requested")) ' the same as Product_Code is there is no substitution 
-            ''            .WriteEndElement() ' itemCode
+    '        ''            .WriteStartElement("itemCode")
+    '        ''            .WriteString(row("Product_Code_Requested")) ' the same as Product_Code is there is no substitution 
+    '        ''            .WriteEndElement() ' itemCode
 
-            ''            .WriteStartElement("itemQuantity") : .WriteString(row("Qty").ToString) : .WriteEndElement() 'NOTE Qty 0 = can not supply this item and no substitude available
-            ''            .WriteStartElement("itemPrice") : .WriteString(Nz(Of Decimal)(row("Unit_Price"), 0).ToString("0.00")) : .WriteEndElement()
+    '        ''            .WriteStartElement("itemQuantity") : .WriteString(row("Qty").ToString) : .WriteEndElement() 'NOTE Qty 0 = can not supply this item and no substitude available
+    '        ''            .WriteStartElement("itemPrice") : .WriteString(Nz(Of Decimal)(row("Unit_Price"), 0).ToString("0.00")) : .WriteEndElement()
 
-            ''            If row("Qty") = 0 Then
-            ''                lItemStatus = "R" 'Rejected 
-            ''                lReason = "PRODUCT_NOT_VALID_FOR_LOCATION"
-            ''            Else
-            ''                lItemStatus = "C" 'Changed
-            ''                lReason = "SUBSTITUTED"
-            ''            End If
+    '        ''            If row("Qty") = 0 Then
+    '        ''                lItemStatus = "R" 'Rejected 
+    '        ''                lReason = "PRODUCT_NOT_VALID_FOR_LOCATION"
+    '        ''            Else
+    '        ''                lItemStatus = "C" 'Changed
+    '        ''                lReason = "SUBSTITUTED"
+    '        ''            End If
 
-            ''            .WriteStartElement("itemStatus") : .WriteString(lItemStatus) : .WriteEndElement()
-            ''            .WriteStartElement("itemReasonForChange") : .WriteString(lReason) : .WriteEndElement()
+    '        ''            .WriteStartElement("itemStatus") : .WriteString(lItemStatus) : .WriteEndElement()
+    '        ''            .WriteStartElement("itemReasonForChange") : .WriteString(lReason) : .WriteEndElement()
 
-            ''            If row("Product_Code").ToString.Length > 0 Then
-            ''                .WriteStartElement("itemSubstitute")
-            ''                .WriteString(row("Product_Code"))
-            ''                .WriteEndElement() 'SubstitutedProduct
-            ''            End If
+    '        ''            If row("Product_Code").ToString.Length > 0 Then
+    '        ''                .WriteStartElement("itemSubstitute")
+    '        ''                .WriteString(row("Product_Code"))
+    '        ''                .WriteEndElement() 'SubstitutedProduct
+    '        ''            End If
 
-            ''            .WriteEndElement() '/item
-            ''        End If
-            ''    Next
-            ''End If
-            ''End If
+    '        ''            .WriteEndElement() '/item
+    '        ''        End If
+    '        ''    Next
+    '        ''End If
+    '        ''End If
 
 
-            'If pOrderResponseType = 2 Then
-            '    If _OrderRequestId <> 0 Then UpdateAcknowledgementDate()
-            'My.Computer.FileSystem.RenameFile(_RESPONSE_OUT & "\" & l_File_UPL, l_File_CON)
-            'File.Copy(_RESPONSE_OUT & "\" & l_File_CON, _RESPONSE_ARCHIVED & "\" & l_File_CON, True)
-            'End If
-            Return True
+    '        'If pOrderResponseType = 2 Then
+    '        '    If _OrderRequestId <> 0 Then UpdateAcknowledgementDate()
+    '        'My.Computer.FileSystem.RenameFile(_RESPONSE_OUT & "\" & l_File_UPL, l_File_CON)
+    '        'File.Copy(_RESPONSE_OUT & "\" & l_File_CON, _RESPONSE_ARCHIVED & "\" & l_File_CON, True)
+    '        'End If
+    '        Return True
 
-        Catch ex As Exception
-            MyEventLog.WriteEntry("ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString, EventLogEntryType.Error, GetEventID)
-            _EmailServiceMessage(Date.Now & " " & "ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString, True)
-        End Try
-        Return False
+    '    Catch ex As Exception
+    '        MyEventLog.WriteEntry("ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString, EventLogEntryType.Error, GetEventID)
+    '        _EmailServiceMessage(Date.Now & " " & "ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString, True)
+    '    End Try
+    '    Return False
 
-    End Function
+    'End Function
 
 #End Region
 
-#Region "Methods INTERSERVE--------------------------------------------------------------"
+#Region "Methods INTERSERVE SAFFRON --------------------------------------------------------------"
 
     Private Sub Process_Interserve()
         Dim asFiles() As String
@@ -3182,10 +3187,10 @@ Public Class WCMOrdering
             Select Case lRetVal
                 Case 0 ' Success
 
-                    If CreateASN_Interserve(2, lCustomeLocationCode, lUnitCode, lArgeementCode, dt, lRetVal, "", lResponseMsg, lCustomerCode) Then
+                    If CreateASN_Saffron(2, lCustomeLocationCode, lUnitCode, lArgeementCode, dt, lRetVal, "", lResponseMsg, lCustomerCode) Then
                         If dt.Rows.Count > 0 Then
                             'create additional  ASN for dual supply order
-                            CreateASN_Interserve(2, lCustomeLocationCode, lUnitCode, lArgeementCode, dt, lRetVal, "", lResponseMsg, lCustomerCode)
+                            CreateASN_Saffron(2, lCustomeLocationCode, lUnitCode, lArgeementCode, dt, lRetVal, "", lResponseMsg, lCustomerCode)
                         End If
                         MyEventLog.WriteEntry("Order Processed: " & _Status & " " & _OrderNum & " {" & _OrderRequestId & "} for " & _AccNum, EventLogEntryType.Information, GetEventID)
                         If _Status.StartsWith("MODIFIED") Then
@@ -3198,10 +3203,10 @@ Public Class WCMOrdering
                 Case Else
                     _Status = "REJECTED"
                     If lErrMsg = "CUSTOMER_IDENTIFICATION_NUMBER_IS_INVALID" Then lErrMsg = " SUSPENDED ACCOUNT "
-                    If CreateASN_Interserve(2, lCustomeLocationCode, lUnitCode, lArgeementCode, dt, lRetVal, lErrMsg, lResponseMsg, lCustomerCode) Then
+                    If CreateASN_Saffron(2, lCustomeLocationCode, lUnitCode, lArgeementCode, dt, lRetVal, lErrMsg, lResponseMsg, lCustomerCode) Then
                         If dt.Rows.Count > 0 Then
                             'create additional  ASN for dual supply order
-                            CreateASN_Interserve(2, lCustomeLocationCode, lUnitCode, lArgeementCode, dt, lRetVal, "", lResponseMsg, lCustomerCode)
+                            CreateASN_Saffron(2, lCustomeLocationCode, lUnitCode, lArgeementCode, dt, lRetVal, "", lResponseMsg, lCustomerCode)
                         End If
                         _EmailServiceMessage(Date.Now & " ORDER REJECTED: " & _OrderNum & " {" & _OrderRequestId & "} for " & _AccNum & lErrMsg & vbNewLine & vbNewLine & lResponseMsg)
                         System.Threading.Thread.Sleep(50)
@@ -3222,13 +3227,126 @@ Public Class WCMOrdering
     End Function
 
     ''' <summary>
+    ''' 'process  ASN for Standing Orders (sub-buying group Debra, System generated Daily SO from  standing orders for these site, WCM needs to generate and supplly ASN to Saffron to match order/delivery note numbers on invoices.=))
     ''' 
     ''' </summary>
-    ''' <param name="pOrderResponseType">1=Acknowledgement, 2=order confirmation, 3=order ASN</param>
+    ''' <returns></returns>
+    Private Function Process_Saffron_ASN() As MsgBoxResult
+        Dim l_DB = New DB
+        Dim param As SqlClient.SqlParameter
+        Dim cmd As SqlClient.SqlCommand
+
+        Dim lRetVal As Integer = 0
+        Dim lErrMsg As String = String.Empty
+        Dim lResponseMsg As String = String.Empty
+        Dim dt_ASN As DataTable = New DataTable("ASN")
+        Dim dt_Lines As DataTable = Nothing
+        Dim lCustomerLocationCode As String = String.Empty
+        Dim lUnitCode As String = String.Empty
+        Dim lArgeementCode As String = String.Empty
+        Dim lAmendmentID As Integer = 0
+        Dim lSOHID As Integer = 0
+        Dim lCustomerCode As String = ""
+        Dim lDNPrefix As String = ""
+
+        Try
+            _DeliveryDate = Date.Today
+            l_DB.Open()
+
+            cmd = l_DB.SqlCommand("p_SO_ASN_get_list")
+            With cmd
+                .CommandType = Data.CommandType.StoredProcedure
+
+                'Return Value
+                param = .Parameters.Add("@ret", SqlDbType.Int)
+                param.Direction = Data.ParameterDirection.ReturnValue
+
+                param = .Parameters.Add("@delivery_date", SqlDbType.Date)
+                param.Direction = ParameterDirection.Input
+                param.Value = _DeliveryDate
+
+                param = .Parameters.Add("@buying_group_id", SqlDbType.Int)
+                param.Direction = ParameterDirection.Input
+                param.Value = 214 ' ISS
+
+                param = .Parameters.Add("@sub_buying_group_id", SqlDbType.Int)
+                param.Direction = ParameterDirection.Input
+                param.Value = 952 ' Defra
+
+                l_DB.Fill(cmd, dt_ASN)
+                cmd.Dispose()
+
+                _Status = "ACCEPTED"
+
+                _DeliveryDateRequested = _DeliveryDate
+                _OrderRequestId = 0
+                l_DB.Close()
+
+                For Each row As DataRow In dt_ASN.Rows
+                    lAmendmentID = row("amendment_id")
+                    lSOHID = row("SOH_id")
+                    _OrderNum = row("order_num")
+                    _AccNum = row("acc_num")
+                    _Order_DateTime_Created = row("date_created")
+                    lCustomerLocationCode = row("customer_location_code")
+                    lUnitCode = row("customer_unit_code")
+                    lArgeementCode = row("agreement_code")
+                    lCustomerCode = row("customer_code")
+
+                    If lSOHID <> 0 Then
+                        dt_Lines = GetSOLines(lSOHID, _DeliveryDate)
+                    Else
+                        dt_Lines = GetSOAmendmentLines(lAmendmentID)
+                    End If
+                    If CreateASN_Saffron(2, lCustomerLocationCode, lUnitCode, lArgeementCode, dt_Lines, lRetVal, "", lResponseMsg, lCustomerCode) Then
+                        If dt_Lines.Rows.Count > 0 Then
+                            'create additional  ASN for dual supply order
+                            CreateASN_Saffron(2, lCustomerLocationCode, lUnitCode, lArgeementCode, dt_Lines, lRetVal, "", lResponseMsg, lCustomerCode)
+                        End If
+                        MyEventLog.WriteEntry("ASN Processed: " & _Status & " " & _OrderNum & " {SO} for " & _AccNum, EventLogEntryType.Information, GetEventID)
+                    End If
+                    System.Threading.Thread.Sleep(50)
+                Next
+
+            End With
+
+
+
+
+            '_Status = "REJECTED"
+            'If lErrMsg = "CUSTOMER_IDENTIFICATION_NUMBER_IS_INVALID" Then lErrMsg = " SUSPENDED ACCOUNT "
+            'If CreateASN_Saffron(2, lCustomerLocationCode, lUnitCode, lArgeementCode, dt, lRetVal, lErrMsg, lResponseMsg, lCustomerCode) Then
+            '    If dt.Rows.Count > 0 Then
+            '        'create additional  ASN for dual supply order
+            '        CreateASN_Saffron(2, lCustomerLocationCode, lUnitCode, lArgeementCode, dt, lRetVal, "", lResponseMsg, lCustomerCode)
+            '    End If
+            '    _EmailServiceMessage(Date.Now & " ORDER REJECTED: " & _OrderNum & " {" & _OrderRequestId & "} for " & _AccNum & lErrMsg & vbNewLine & vbNewLine & lResponseMsg)
+            '    System.Threading.Thread.Sleep(50)
+            'End If
+            'MyEventLog.WriteEntry("Order REJECTED: " & _OrderNum & " {" & _OrderRequestId & "} for " & _AccNum & lErrMsg, EventLogEntryType.Warning, GetEventID)
+
+
+        Catch ex As Exception
+            MyEventLog.WriteEntry("ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString, EventLogEntryType.Error, GetEventID)
+            _EmailServiceMessage(Date.Now & " " & "ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString, True)
+            If ex.Message.ToString.ToUpperInvariant.Contains("TIMEOUT EXPIRED") Then
+                Return MsgBoxResult.Retry
+            End If
+        Finally
+
+        End Try
+        Return MsgBoxResult.Abort
+    End Function
+
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <param name="pOrderResponseType">1=Acknowledgement, 2=order ASN</param>
     ''' <returns></returns>
     ''' <remarks> </remarks>
-    Private Function CreateASN_Interserve(pOrderResponseType As Integer, pCustomerLocationCode As String, pUnitCode As String, pArgeementCode As String, ByRef dtLines As DataTable, pErrCode As Integer _
+    Private Function CreateASN_Saffron(pOrderResponseType As Integer, pCustomerLocationCode As String, pUnitCode As String, pArgeementCode As String, ByRef dtLines As DataTable, pErrCode As Integer _
             , pErrMsg As String, ByRef pResponse As String, ByVal pCustomerCode As String) As Boolean
+
         Dim xmlWriter As XmlWriter = Nothing
         Dim dtProcessDate As Date = Now
         Dim l_File_UPL As String = "", l_File_CON As String = ""
@@ -3290,14 +3408,16 @@ Public Class WCMOrdering
                 .WriteStartElement("LocationPostalCode") : .WriteEndElement()
 
                 .WriteStartElement("CustomersOrderNumber") : .WriteString(_OrderNum) : .WriteEndElement()
+
                 .WriteStartElement("CustomersOrderDate") : .WriteString(_Order_DateTime_Created.Replace("-", "")) : .WriteEndElement()
+
                 .WriteStartElement("SuppliersOrderNumber") : .WriteString(_OrderNum) : .WriteEndElement()
 
                 .WriteStartElement("DateOrderReceivedBySupplier") : .WriteString(Date.Today.ToString("yyyyMMdd")) : .WriteEndElement()
 
                 '' .WriteStartElement("DeliveryNoteNumber") : .WriteString("DN_" & _OrderNum) : .WriteEndElement()
                 .WriteStartElement("DeliveryNoteNumber") : .WriteString(l_DN) : .WriteEndElement() 'replaced above line by VS on 31/05/2023
-                .WriteStartElement("DeliveryNoteDate") : .WriteString(_Order_DateTime_Created) : .WriteEndElement()
+                .WriteStartElement("DeliveryNoteDate") : .WriteString(_DeliveryDate) : .WriteEndElement()
 
                 .WriteStartElement("ExpectedDeliveryDateTime")
 
@@ -3349,24 +3469,14 @@ Public Class WCMOrdering
                                     .WriteStartElement("ItemDescription") : .WriteString(row("Product_Requested")) : .WriteEndElement()
                                     .WriteEndElement() '/item
                                 End If
-                                'Output substitude as well as ordered product which was not available
-                                If row("Qty") <> 0 Then
-                                    .WriteStartElement("Item")
-                                    .WriteStartElement("ItemEANCode") : .WriteString("") : .WriteEndElement()
-
-                                    .WriteStartElement("SuppliersProductCode") : .WriteString(row("Product_Code")) : .WriteEndElement() ' SuppliersProductCode
-                                    .WriteStartElement("Quantity") : .WriteString(row("Qty").ToString) : .WriteEndElement()
-                                    .WriteStartElement("LineAgreementCode") : .WriteString(pArgeementCode) : .WriteEndElement()
-                                    .WriteStartElement("ItemDescription") : .WriteString(row("Product")) : .WriteEndElement()
-                                    .WriteEndElement() '/item
-                                End If
-
-                            Else
+                            End If
+                            'Output ordered product (or substitude)
+                            If row("Qty") <> 0 Then
                                 .WriteStartElement("Item")
                                 .WriteStartElement("ItemEANCode") : .WriteString("") : .WriteEndElement()
 
-                                .WriteStartElement("SuppliersProductCode") : .WriteString(row("Product_Code_Requested")) : .WriteEndElement() ' SuppliersProductCode
-                                .WriteStartElement("Quantity") : .WriteString(row("Qty").ToString) : .WriteEndElement() 'NOTE Qty 0 = can not supply this item and no substitude available
+                                .WriteStartElement("SuppliersProductCode") : .WriteString(row("Product_Code")) : .WriteEndElement() ' SuppliersProductCode
+                                .WriteStartElement("Quantity") : .WriteString(row("Qty").ToString) : .WriteEndElement()
                                 .WriteStartElement("LineAgreementCode") : .WriteString(pArgeementCode) : .WriteEndElement()
                                 .WriteStartElement("ItemDescription") : .WriteString(row("Product")) : .WriteEndElement()
                                 .WriteEndElement() '/item
@@ -4209,7 +4319,55 @@ Public Class WCMOrdering
         End Try
         Return dt
     End Function
+    Private Function GetSOAmendmentLines(pAmendmentID As Integer) As DataTable
+        Dim l_DB = New DB
+        Dim cmd As SqlClient.SqlCommand = Nothing
+        Dim dt As DataTable = New DataTable("order_lines")
+        Try
+            l_DB.Open()
+            cmd = l_DB.SqlCommand("p_SO_amendment_lines_get")
+            With cmd
+                .CommandType = Data.CommandType.StoredProcedure
+                .Parameters.Add("@order_id", SqlDbType.Int)
+                .Parameters("@order_id").Value = pAmendmentID
+            End With
+            l_DB.Fill(cmd, dt)
+            cmd.Dispose()
+            l_DB.Close()
+        Catch ex As Exception
+            MyEventLog.WriteEntry("ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString, EventLogEntryType.Error, GetEventID)
+            _EmailServiceMessage(Date.Now & " " & "ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString, True)
+        Finally
 
+        End Try
+        Return dt
+    End Function
+    Private Function GetSOLines(pSOHID As Integer, pDeliveryDate As Date) As DataTable
+        Dim l_DB = New DB
+        Dim cmd As SqlClient.SqlCommand = Nothing
+        Dim dt As DataTable = New DataTable("SO_lines")
+        Try
+            l_DB.Open()
+            cmd = l_DB.SqlCommand("p_SO_lines_get")
+            With cmd
+                .CommandType = Data.CommandType.StoredProcedure
+                .Parameters.Add("@SOH_id", SqlDbType.Int)
+                .Parameters("@SOH_id").Value = pSOHID
+                .Parameters.Add("@delivery_date", SqlDbType.Date)
+                .Parameters("@delivery_date").Value = pDeliveryDate
+            End With
+            l_DB.Fill(cmd, dt)
+            cmd.Dispose()
+            l_DB.Close()
+
+        Catch ex As Exception
+            MyEventLog.WriteEntry("ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString, EventLogEntryType.Error, GetEventID)
+            _EmailServiceMessage(Date.Now & " " & "ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString, True)
+        Finally
+
+        End Try
+        Return dt
+    End Function
     Private Function UpdateAcknowledgementDate() As Integer
         Dim l_DB As New DB
         Dim cmd As SqlClient.SqlCommand = Nothing
@@ -4868,6 +5026,11 @@ Public Class WCMOrdering
 
         Try
             mOrder = New COrderHeader(pOrderID, COrderHeader.BuyerSequence = COrderHeader.BuyerSeq.PushEmailWebApp_500)
+            If mOrder Is Nothing Then
+                MyEventLog.WriteEntry("ERROR: Failed to retrieve Order ID = " & pOrderID.ToString & " Buyer " & COrderHeader.BuyerSeq.PushEmailWebApp_500.ToString & " in " & _MeName & ".EmailOrder", EventLogEntryType.Error, GetEventID)
+                _EmailServiceMessage(Date.Now & " ERROR: Failed to retrieve Order ID = " & pOrderID.ToString & " Buyer " & COrderHeader.BuyerSeq.PushEmailWebApp_500.ToString & " in " & _MeName & ".EmailOrder", True)
+                Return False
+            End If
 
             If mOrder.EDIOrdersFlag Then
                 ' commented out by VS on 27/09/2023 - applies to any depot with edi flag on
