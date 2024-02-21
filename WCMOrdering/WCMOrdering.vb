@@ -5054,7 +5054,7 @@ Public Class WCMOrdering
                 Return False
             Else
                 If mOrder.ProduceItems.Count > 0 AndAlso mOrder.DepotId_Produce <> 0 Then
-                    If mOrder.HOId = 245739642 OrElse mOrder.HOId = 245740000 Then 'ISS1 and ISS2
+                    If mOrder.HOId = 245739642 OrElse mOrder.HOId = 245740000 OrElse mOrder.Depot.Contains("Hovis") Then 'ISS1 and ISS2
                         'Add this line in the notes for all ISS sites
                         mOrder.Notes = "</br></br></br> ---- PLEASE SUPPLY ONLY THE ABOVE. THE ORDER MUST NOT BE INCREASED OR AMENDED WITHOUT AUTHORISATION FROM WEST COUNTRY MILK LTD ---- </br></br>---- IF POSSIBLE PLEASE INCLUDE PURCHASE ORDER REFFERENCE ON DELIVERY NOTE----</br></br>"
                         mOrder.Notes &= "<b style='color:red;'>---- IMPORTANT ALLERGEN CONTROL - No Brand Substitutes Allowed on Bread Products ----</b></br></br>"
@@ -5080,7 +5080,7 @@ Public Class WCMOrdering
                     If mOrder.HOId = 160973922 OrElse mOrder.HOId = 160974269 OrElse mOrder.HOId = 160974511 Then
                         'Add this line in the notes for all interserve site
                         mOrder.Notes = If(mOrder.Notes.Contains("</br></br></br>---- PLEASE SUPPLY ONLY RED TRACTOR MILK FOR THIS SITE ---- </br> </br>---- PLEASE SUPPLY ONLY THE ABOVE. THE ORDER MUST NOT BE INCREASED OR AMENDED WITHOUT AUTHORISATION FROM WEST COUNTRY MILK LTD ---- </br></br>---- IF POSSIBLE PLEASE INCLUDE PURCHASE ORDER REFFERENCE ON DELIVERY NOTE----</br></br>"), mOrder.Notes, mOrder.Notes + "</br></br></br>---- PLEASE SUPPLY ONLY RED TRACTOR MILK FOR THIS SITE ---- </br></br> ---- PLEASE SUPPLY ONLY THE ABOVE. THE ORDER MUST NOT BE INCREASED OR AMENDED WITHOUT AUTHORISATION FROM WEST COUNTRY MILK LTD ---- </br></br>---- IF POSSIBLE PLEASE INCLUDE PURCHASE ORDER REFFERENCE ON DELIVERY NOTE----</br></br>")
-                    ElseIf mOrder.HOId = 245739642 OrElse mOrder.HOId = 245740000 Then 'ISS1 and ISS2
+                    ElseIf mOrder.HOId = 245739642 OrElse mOrder.HOId = 245740000 OrElse mOrder.Depot.Contains("Hovis") Then 'ISS1 and ISS2
                         'Add this line in the notes for all ISS sites
                         mOrder.Notes = "</br></br></br> ---- PLEASE SUPPLY ONLY THE ABOVE. THE ORDER MUST NOT BE INCREASED OR AMENDED WITHOUT AUTHORISATION FROM WEST COUNTRY MILK LTD ---- </br></br>---- IF POSSIBLE PLEASE INCLUDE PURCHASE ORDER REFFERENCE ON DELIVERY NOTE----</br></br>"
                         mOrder.Notes &= "<b style='color:red;'>---- IMPORTANT ALLERGEN CONTROL - No Brand Substitutes Allowed on Bread Products ----</b></br></br>"

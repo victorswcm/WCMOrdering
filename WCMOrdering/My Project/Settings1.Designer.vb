@@ -416,7 +416,7 @@ Namespace My
         
         <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
          Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-         Global.System.Configuration.DefaultSettingValueAttribute("2")>  _
+         Global.System.Configuration.DefaultSettingValueAttribute("1")>  _
         Public ReadOnly Property Switch_Interserve_Saffron() As String
             Get
                 Return CType(Me("Switch_Interserve_Saffron"),String)

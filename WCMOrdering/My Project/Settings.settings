@@ -123,7 +123,7 @@
       <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\FoodBuy_Online\ORDERS\Processed_Orders</Value>
     </Setting>
     <Setting Name="Switch_Interserve_Saffron" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">2</Value>
+      <Value Profile="(Default)">1</Value>
     </Setting>
     <Setting Name="GLN_INTERSERVE" Type="System.String" Scope="Application">
       <Value Profile="(Default)">5060642190021</Value>
