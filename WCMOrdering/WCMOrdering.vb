@@ -296,69 +296,72 @@ Public Class WCMOrdering
                 _workStartTime = Date.Now
 
 
-                If GetSetting_PushEmail("WEBAPP") Then
-                    If GetOrdersNotEmailed() Then ' webapp not emailed
-                        PushEmailOrders()
-                    End If
-                    If GetStandingNotEmailed() Then ' SO not emailed
-                        PushEmailStandingOrders()
-                    End If
-                End If
-                If GetSetting_PushEmail("P2P") Then
-                    If GetOrdersNotEmailed() Then ' P2P not emailed
-                        PushEmailOrders()
-                    End If
-                End If
+                ''If GetSetting_PushEmail("WEBAPP") Then
+                ''    If GetOrdersNotEmailed() Then ' webapp not emailed
+                ''        PushEmailOrders()
+                ''    End If
+                ''    If GetStandingNotEmailed() Then ' SO not emailed
+                ''        PushEmailStandingOrders()
+                ''    End If
+                ''End If
+                ''If GetSetting_PushEmail("P2P") Then
+                ''    If GetOrdersNotEmailed() Then ' P2P not emailed
+                ''        PushEmailOrders()
+                ''    End If
+                ''End If
 
-                If GetSetting_Foodbuy_Online() Then
-                    ' former compass
-                    Process_FoodBuy_Online()
-                End If
+                ''If GetSetting_Foodbuy_Online() Then
+                ''    ' former compass
+                ''    Process_FoodBuy_Online()
+                ''End If
 
-                If GetSetting_Bourne() Then
-                    Process_Bourne()
-                End If
+                ''If GetSetting_Bourne() Then
+                ''    Process_Bourne()
+                ''End If
 
                 If GetSetting_Interserve_saffron() Then
                     Process_Interserve()
 
                     'process Saffron ASN for Standing Orders (sub-buying group Debra)
-                    If DateDiff(DateInterval.Day, _Saffron_ASN_done, Now.Date) > 0 Then
-                        If Date.Now.Hour = 19 AndAlso (Date.Now.Minute > 30 AndAlso Date.Now.Minute < 35) Then
-                            Process_Saffron_ASN()
-                            _Saffron_ASN_done = Now.Date
-                        End If
-                    End If
+                    'If DateDiff(DateInterval.Day, _Saffron_ASN_done, Now.Date) > 0 Then
+                    '    If Date.Now.Hour = 19 AndAlso (Date.Now.Minute > 30 AndAlso Date.Now.Minute < 35) Then
+                    For idx As Integer = 0 To 14
+                        Process_Saffron_ASN(DateAdd(DateInterval.Day, idx, CDate("11 Mar 2024")))
+                        System.Threading.Thread.Sleep(100)
+                        '_Saffron_ASN_done = Now.Date
+                        ''    End If
+                        ''End
+                    Next
                 End If
 
-                    If GetSetting_DN_Grahams() Then
-                    Process_DN_Grahams()
-                End If
+                'If GetSetting_DN_Grahams() Then
+                '    Process_DN_Grahams()
+                'End If
 
 
-                If GetSetting_CN_CrunchTime() Then
-                    Process_CN_CrunchTime()
-                End If
+                'If GetSetting_CN_CrunchTime() Then
+                '    Process_CN_CrunchTime()
+                'End If
 
 
-                Process_DairyData_MillsMilk()
+                'Process_DairyData_MillsMilk()
 
-                Process_AllanReeder()
+                'Process_AllanReeder()
 
 
-                Process_DairyData_Paynes()
+                'Process_DairyData_Paynes()
 
-                Process_DairyData_Broadland()
+                'Process_DairyData_Broadland()
 
-                Order_Alert_OfficeDrop()
+                'Order_Alert_OfficeDrop()
 
-                Order_Alert_BR003()
+                'Order_Alert_BR003()
 
-                Process_Johal()
+                'Process_Johal()
 
-                Process_Grahams()
+                'Process_Grahams()
 
-                Process_JJWison()
+                'Process_JJWison()
 
                 _workStartTime = Date.MinValue
             End If
@@ -3225,13 +3228,15 @@ Public Class WCMOrdering
         End Try
         Return MsgBoxResult.Abort
     End Function
-
+    Private Function Process_Saffron_ASN() As MsgBoxResult
+        Return Process_Saffron_ASN(Date.Today)
+    End Function
     ''' <summary>
     ''' 'process  ASN for Standing Orders (sub-buying group Debra, System generated Daily SO from  standing orders for these site, WCM needs to generate and supplly ASN to Saffron to match order/delivery note numbers on invoices.=))
     ''' 
     ''' </summary>
     ''' <returns></returns>
-    Private Function Process_Saffron_ASN() As MsgBoxResult
+    Private Function Process_Saffron_ASN(pDate As Date) As MsgBoxResult
         Dim l_DB = New DB
         Dim param As SqlClient.SqlParameter
         Dim cmd As SqlClient.SqlCommand
@@ -3250,7 +3255,7 @@ Public Class WCMOrdering
         Dim lDNPrefix As String = ""
 
         Try
-            _DeliveryDate = Date.Today
+            _DeliveryDate = pDate
             l_DB.Open()
 
             cmd = l_DB.SqlCommand("p_SO_ASN_get_list")
