@@ -14,6 +14,27 @@ Public Class WCMOrdering
     Private Const c_MYSOURCE As String = "WCMOrderingMySource"
     Private Const c_MYLOG As String = "WCMOrderingLog"
 
+    Public Shared BuyerSequence As Integer = 0
+    Public Enum BuyerSeq
+        EFoods_3 = 3    ' Not in use
+        Mitie_4 = 4
+        Compass_5 = 5  'Not in use
+        CaffeNero_6 = 6 'CrunchTime!
+        Elior_7 = 7 'Lost contract from Oct 2020
+        FoodBuy_Online_8 = 8 ' Compass
+        Cypad_9 = 9 ' Not in use
+        Medina_10 = 10
+        BourneLeisure_11 = 11
+        Interserve_12 = 12
+        Poundland_14 = 14
+        Zupa_16 = 16
+        Johal_17 = 17
+        McColls_18 = 18
+        Weezy_19 = 19
+        DN_Grahams_98 = 98
+        EmailOrders_99 = 99
+        Order_Upload_1000 = 1000 ' use to generate orders
+    End Enum
     Private Property _workStartTime As Date = DateTime.MinValue
 
     Private Property _eventId_Common As Integer = 0
@@ -27,7 +48,6 @@ Public Class WCMOrdering
     Private Property _eventId_FoodBuy_Online As Integer = 40001 ' 8
     Private Property _eventId_Email_Orders As Integer = 45001   '99
     Private Property _eventId_DN_Grahams As Integer = 50001     '98
-    Private Property _eventId_Poundland As Integer = 55001      '13
     Private Property _eventId_CN_CSV As Integer = 60001         ' 6
     Private Property _eventId_McColls As Integer = 10001         '18 
     Private Property _eventId_Zupa As Integer = 1001           '16 --Zupa, re-use Elior range
@@ -81,9 +101,7 @@ Public Class WCMOrdering
     Private __LastOrderReceivedDatetime_Interserve As Date
     Private __LastWarningEmailDatetime_Interserve As Date
     '-----------------
-    'POUNDLAND------------
-    Private __LastOrderReceivedDatetime_Poundland As Date
-    Private __LastWarningEmailDatetime_Poundland As Date
+
     'CAFE NERO CSV------------
     Private __LastOrderReceivedDatetime_CN_CSV As Date
     Private __LastWarningEmailDatetime_CN_CSV As Date
@@ -104,6 +122,7 @@ Public Class WCMOrdering
     Private _DairyData_DHT_done As Date = "2020-01-01"
     Private _DairyData_Paynes_done As Date = "2020-01-01"
     Private _Johal_done As Date = "2020-01-01"
+    Private _Freshways_done As Date = "2020-01-01"
     Private _Grahams_done As Date = "2020-01-01"
     Private _DairyData_Broadland_done As Date = "2020-01-01"
     Private _Chew_Valley_done As Date = "2020-01-01"
@@ -124,11 +143,6 @@ Public Class WCMOrdering
     Private _RESPONSE_ARCHIVED As String = String.Empty
     Private _ORDER_OUT As String = String.Empty
     Private _SUPPLIER_ID As Long = 0
-
-    Private WithEvents mOrder As COrderHeader
-
-    Private _Orders_ToEmail As Stack(Of Integer)
-    Private _SO_ToEmail As Stack(Of Integer)
 
     Public Enum ServiceState
         SERVICE_STOPPED = 1
@@ -174,7 +188,6 @@ Public Class WCMOrdering
         __LastOrderReceivedDatetime_Bourne = Date.Now
         __LastOrderReceivedDatetime_Medina = Date.Now
         __LastOrderReceivedDatetime_Interserve = Date.Now
-        __LastOrderReceivedDatetime_Poundland = Date.Now
         __LastOrderReceivedDatetime_Zupa = Date.Now
         __LastOrderReceivedDatetime_McColls = Date.Now
     End Sub
@@ -207,7 +220,6 @@ Public Class WCMOrdering
             __LastOrderReceivedDatetime_Bourne = Date.Now
             __LastOrderReceivedDatetime_Medina = Date.Now
             __LastOrderReceivedDatetime_Interserve = Date.Now
-            __LastOrderReceivedDatetime_Poundland = Date.Now
             __LastOrderReceivedDatetime_Zupa = Date.Now
             __LastOrderReceivedDatetime_McColls = Date.Now
 
@@ -257,7 +269,6 @@ Public Class WCMOrdering
         Dim l_Interval_Bourne As Integer = DateDiff(DateInterval.Minute, __LastOrderReceivedDatetime_Bourne, Date.Now)
         Dim l_Interval_Medina As Integer = DateDiff(DateInterval.Minute, __LastOrderReceivedDatetime_Medina, Date.Now)
         Dim l_Interval_Interserve As Integer = DateDiff(DateInterval.Minute, __LastOrderReceivedDatetime_Interserve, Date.Now)
-        Dim l_Interval_Poundland As Integer = DateDiff(DateInterval.Minute, __LastOrderReceivedDatetime_Poundland, Date.Now)
         Dim l_Interval_Zupa As Integer = DateDiff(DateInterval.Minute, __LastOrderReceivedDatetime_Zupa, Date.Now)
         Dim l_Interval_McColls As Integer = DateDiff(DateInterval.Minute, __LastOrderReceivedDatetime_McColls, Date.Now)
 
@@ -296,72 +307,59 @@ Public Class WCMOrdering
                 _workStartTime = Date.Now
 
 
-                ''If GetSetting_PushEmail("WEBAPP") Then
-                ''    If GetOrdersNotEmailed() Then ' webapp not emailed
-                ''        PushEmailOrders()
-                ''    End If
-                ''    If GetStandingNotEmailed() Then ' SO not emailed
-                ''        PushEmailStandingOrders()
-                ''    End If
-                ''End If
-                ''If GetSetting_PushEmail("P2P") Then
-                ''    If GetOrdersNotEmailed() Then ' P2P not emailed
-                ''        PushEmailOrders()
-                ''    End If
-                ''End If
+                If GetSetting_Foodbuy_Online() Then
+                    Process_FoodBuy_Online() ' former compass
+                End If
 
-                ''If GetSetting_Foodbuy_Online() Then
-                ''    ' former compass
-                ''    Process_FoodBuy_Online()
-                ''End If
-
-                ''If GetSetting_Bourne() Then
-                ''    Process_Bourne()
-                ''End If
+                If GetSetting_Bourne() Then
+                    Process_Bourne()
+                End If
 
                 If GetSetting_Interserve_saffron() Then
                     Process_Interserve()
 
-                    'process Saffron ASN for Standing Orders (sub-buying group Debra)
-                    'If DateDiff(DateInterval.Day, _Saffron_ASN_done, Now.Date) > 0 Then
-                    '    If Date.Now.Hour = 19 AndAlso (Date.Now.Minute > 30 AndAlso Date.Now.Minute < 35) Then
-                    For idx As Integer = 0 To 14
-                        Process_Saffron_ASN(DateAdd(DateInterval.Day, idx, CDate("11 Mar 2024")))
-                        System.Threading.Thread.Sleep(100)
-                        '_Saffron_ASN_done = Now.Date
-                        ''    End If
-                        ''End
-                    Next
+                    'Process Saffron ASN for Standing Orders (sub-buying group Debra)
+                    If DateDiff(DateInterval.Day, _Saffron_ASN_done, Now.Date) > 0 Then
+                        If Date.Now.Hour = My.Settings.Saffron_ASN_hour AndAlso (Date.Now.Minute > My.Settings.Saffron_ASN_minute AndAlso Date.Now.Minute < My.Settings.Saffron_ASN_minute + 5) Then
+                            Process_Saffron_ASN(Now.Date)
+                            System.Threading.Thread.Sleep(100)
+                            _Saffron_ASN_done = Now.Date
+                        End If
+                        'For idx As Integer = 0 To 26
+                        '    Process_Saffron_ASN(DateAdd(DateInterval.Day, idx, CType("1 Apr 2024", Date)), True)
+                        '    System.Threading.Thread.Sleep(100)
+                        'Next
+
+                    End If
                 End If
 
-                'If GetSetting_DN_Grahams() Then
-                '    Process_DN_Grahams()
-                'End If
+                If GetSetting_DN_Grahams() Then
+                    Process_DN_Grahams()
+                End If
 
+                If GetSetting_CN_CrunchTime() Then
+                    Process_CN_CrunchTime()
+                End If
 
-                'If GetSetting_CN_CrunchTime() Then
-                '    Process_CN_CrunchTime()
-                'End If
+                Process_DairyData_MillsMilk()
 
+                Process_AllanReeder()
 
-                'Process_DairyData_MillsMilk()
+                Process_DairyData_Paynes()
 
-                'Process_AllanReeder()
+                Process_DairyData_Broadland()
 
+                Order_Alert_OfficeDrop()
 
-                'Process_DairyData_Paynes()
+                Order_Alert_BR003()
 
-                'Process_DairyData_Broadland()
+                Process_Johal()
 
-                'Order_Alert_OfficeDrop()
+                Process_Freshways()
 
-                'Order_Alert_BR003()
+                Process_Grahams()
 
-                'Process_Johal()
-
-                'Process_Grahams()
-
-                'Process_JJWison()
+                Process_JJWison()
 
                 _workStartTime = Date.MinValue
             End If
@@ -490,6 +488,7 @@ Public Class WCMOrdering
 
         Try
             l_DB.Open()
+            cmd = l_DB.SqlCommand("p_P2P_order_import")
 
             lReader = New StreamReader(pFileName)
             lXMLContents = lReader.ReadToEnd()
@@ -498,7 +497,6 @@ Public Class WCMOrdering
             lXMLContents = lXMLContents.Replace("<sh:", "<").Replace("<eanucc:", "<").Replace("<order:", "<")
             lXMLContents = lXMLContents.Replace("</sh:", "</").Replace("</eanucc:", "</").Replace("</order:", "</")
             lXMLContents = lXMLContents.Replace("encoding=""utf-8""", "")
-            cmd = l_DB.SqlCommand("p_P2P_order_import")
 
             With cmd
                 .CommandType = Data.CommandType.StoredProcedure
@@ -577,14 +575,11 @@ Public Class WCMOrdering
                             If _Test_Mode Then
                                 _EmailServiceMessage(Date.Now & " ORDER RESPONSE CREATED: " & _OrderNum & " {Request id = " & _OrderRequestId & "} for " & _AccNum)
                             End If
-                            System.Threading.Thread.Sleep(50)
 
-                            If EmailOrder(lNewOrderID) Then
-                                Return MsgBoxResult.Ok
-                            End If
+                            Return MsgBoxResult.Ok
                         End If
 
-                        Return MsgBoxResult.Ok
+
                         'Case 1 To 333
                         '    _Status = "REJECTED"
                         '    Return CreateOrderResponse(lErrMsg)
@@ -601,13 +596,10 @@ Public Class WCMOrdering
 
                             _EmailServiceMessage(Date.Now & " ORDER REJECTED: " & _OrderNum & " {" & _OrderRequestId & "} for " & _AccNum & lErrMsg)
 
-
                             System.Threading.Thread.Sleep(50)
                         End If
                 End Select
             End With
-            cmd.Dispose()
-            l_DB.Close()
 
         Catch ex As Exception
             MyEventLog.WriteEntry("ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString, EventLogEntryType.Error, GetEventID)
@@ -616,7 +608,8 @@ Public Class WCMOrdering
                 Return MsgBoxResult.Retry
             End If
         Finally
-
+            cmd.Dispose()
+            l_DB.Close()
         End Try
         Return MsgBoxResult.Abort
     End Function
@@ -940,6 +933,7 @@ Public Class WCMOrdering
 
         Try
             l_DB.Open()
+            cmd = l_DB.SqlCommand("p_P2P_order_import_Zupa")
 
             lReader = New StreamReader(pFileName)
             lXMLContents = lReader.ReadToEnd()
@@ -948,7 +942,6 @@ Public Class WCMOrdering
             lXMLContents = lXMLContents.Replace("<sh:", "<").Replace("<eanucc:", "<").Replace("<order:", "<")
             lXMLContents = lXMLContents.Replace("</sh:", "</").Replace("</eanucc:", "</").Replace("</order:", "</")
             lXMLContents = lXMLContents.Replace("encoding=""utf-8""", "")
-            cmd = l_DB.SqlCommand("p_P2P_order_import_Zupa")
 
             With cmd
                 If _Test_Mode Then
@@ -1030,14 +1023,9 @@ Public Class WCMOrdering
                             If _Test_Mode Then
                                 _EmailServiceMessage(Date.Now & " ORDER RESPONSE CREATED: " & _OrderNum & " {Request id = " & _OrderRequestId & "} for " & _AccNum)
                             End If
-                            System.Threading.Thread.Sleep(50)
-
-                            If EmailOrder(lNewOrderID) Then
-                                Return MsgBoxResult.Ok
-                            End If
                         End If
 
-                        Return MsgBoxResult.Ok
+
                         'Case 1 To 333
                         '    _Status = "REJECTED"
                         '    Return CreateOrderResponse(lErrMsg)
@@ -1057,8 +1045,9 @@ Public Class WCMOrdering
                         End If
                 End Select
             End With
-            cmd.Dispose()
-            l_DB.Close()
+
+            Return MsgBoxResult.Ok
+
         Catch ex As Exception
             MyEventLog.WriteEntry("ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString, EventLogEntryType.Error, GetEventID)
             _EmailServiceMessage(Date.Now & " " & "ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString, True)
@@ -1066,7 +1055,8 @@ Public Class WCMOrdering
                 Return MsgBoxResult.Retry
             End If
         Finally
-
+            cmd.Dispose()
+            l_DB.Close()
         End Try
         Return MsgBoxResult.Abort
     End Function
@@ -1257,8 +1247,8 @@ Public Class WCMOrdering
         Return False
     End Function
 #End Region
-#Region "Methods FoodBuy_Online--------------------------------------------------------------"
 
+#Region "Methods FoodBuy_Online--------------------------------------------------------------"
     Private Sub Process_FoodBuy_Online()
         Dim asFiles() As String
         Dim l_File As String
@@ -1296,7 +1286,6 @@ Public Class WCMOrdering
 
         End Try
     End Sub
-
     Private Function UploadFile_FoodBuy_Online(ByVal pFileName As String) As MsgBoxResult
         Dim l_DB = New DB
         Dim param As SqlClient.SqlParameter
@@ -1310,6 +1299,7 @@ Public Class WCMOrdering
 
         Try
             l_DB.Open()
+            cmd = l_DB.SqlCommand("p_P2P_order_import_fbo")
 
             lReader = New StreamReader(pFileName)
             lXMLContents = lReader.ReadToEnd()
@@ -1318,7 +1308,6 @@ Public Class WCMOrdering
             lXMLContents = lXMLContents.Replace(" encoding=""UTF-8""", "")
             lXMLContents = lXMLContents.Replace("xmlns=""urn:www-basda-org/schema/purord.xml""", "")
             ''lXMLContents = lXMLContents.Replace("<ns0:", "<").Replace("</ns0:", "</")
-            cmd = l_DB.SqlCommand("p_P2P_order_import_fbo")
 
             With cmd
                 .CommandType = Data.CommandType.StoredProcedure
@@ -1428,11 +1417,6 @@ Public Class WCMOrdering
                             If _Test_Mode Then
                                 _EmailServiceMessage(Date.Now & " ORDER RESPONSE CREATED: " & _Status & " " & _OrderNum & " {" & _OrderRequestId & "} for " & _AccNum)
                             End If
-                            System.Threading.Thread.Sleep(50)
-
-                            If EmailOrder(lNewOrderID) Then
-
-                            End If
                         End If
 
                         Return MsgBoxResult.Ok
@@ -1447,13 +1431,11 @@ Public Class WCMOrdering
                         _EmailServiceMessage(Date.Now & " ORDER REJECTED: " & _OrderNum & " {" & _OrderRequestId & "} for " & _AccNum & lErrMsg)
                         If CreateOrderResponse_FoodBuy_Online(2, dt, lRetVal, lErrMsg, lRejectCode) Then
 
-
                             Return MsgBoxResult.Abort
                         End If
                 End Select
             End With
-            cmd.Dispose()
-            l_DB.Close()
+
         Catch ex As Exception
             MyEventLog.WriteEntry("ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString, EventLogEntryType.Error, GetEventID)
             _EmailServiceMessage(Date.Now & " " & "ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString, True)
@@ -1461,7 +1443,8 @@ Public Class WCMOrdering
                 Return MsgBoxResult.Retry
             End If
         Finally
-
+            cmd.Dispose()
+            l_DB.Close()
         End Try
         Return MsgBoxResult.Abort
     End Function
@@ -1660,698 +1643,6 @@ Public Class WCMOrdering
 
 #End Region
 
-#Region "Methods Poundland--------------------------------------------------------------"
-
-    Private Sub Process_Poundland()
-        Dim asFiles() As String
-        Dim l_File As String
-        Dim idx As Integer
-
-        Dim lResult As MsgBoxResult
-
-        Try
-            ''MyEventLog.WriteEntry("Monitoring the System", EventLogEntryType.Information, GetEventID))
-
-            'PROCESS NEW ORDERS
-            asFiles = Directory.GetFiles(_ORDER_IN)
-
-            For idx = asFiles.GetLowerBound(0) To asFiles.GetUpperBound(0)
-                l_File = Path.GetFileName(asFiles(idx))
-                MyEventLog.WriteEntry("ORDER REQUEST RECEIVED:  " & l_File, EventLogEntryType.Information, GetEventID)
-                If Not _Test_Mode Then
-                    __LastOrderReceivedDatetime_Poundland = Date.Now
-                    __LastWarningEmailDatetime_Poundland = __LastOrderReceivedDatetime_Poundland
-                End If
-                lResult = UploadFile_Poundland(_ORDER_IN & "\" & l_File)
-                If Not Wrap_Result(lResult, l_File, _Test_Mode AndAlso (idx = asFiles.GetLowerBound(0) OrElse idx = asFiles.GetUpperBound(0))) Then
-                    Return
-                End If
-            Next
-
-        Catch ex As Exception
-            MyEventLog.WriteEntry("ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString, EventLogEntryType.Error, GetEventID)
-            _EmailServiceMessage(Date.Now & " " & "ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString, True)
-        Finally
-
-        End Try
-    End Sub
-
-    Private Function UploadFile_Poundland(ByVal pFileName As String) As MsgBoxResult
-        Dim l_DB = New DB
-        Dim param As SqlClient.SqlParameter
-        Dim cmd As SqlClient.SqlCommand
-        Dim lXMLContents As String = String.Empty
-        Dim lReader As StreamReader
-        Dim lRetVal As Integer = 0
-        Dim lErrMsg As String = String.Empty
-        Dim dt As DataTable = Nothing
-        Dim lNewOrderID As Integer = 0
-
-        Try
-            l_DB.Open()
-
-            lReader = New StreamReader(pFileName)
-            lXMLContents = lReader.ReadToEnd()
-            lReader.Close()
-
-            lXMLContents = lXMLContents.Replace("encoding=""UTF-8""", "")
-            lXMLContents = lXMLContents.Replace("<tc:", "<").Replace("</tc:", "</")
-
-            cmd = l_DB.SqlCommand("p_P2P_order_import_tc")
-
-            With cmd
-                .CommandType = Data.CommandType.StoredProcedure
-
-                'Return Value
-                param = .Parameters.Add("@ret", SqlDbType.Int)
-                param.Direction = Data.ParameterDirection.ReturnValue
-
-                param = .Parameters.Add("@record_id", SqlDbType.Int)
-                param.Direction = ParameterDirection.InputOutput
-                param.Value = 0
-
-                param = .Parameters.Add("@file_name", SqlDbType.VarChar, 100)
-                param.Direction = ParameterDirection.Input
-                param.Value = pFileName
-
-                param = .Parameters.Add("@xml_order", SqlDbType.Xml)
-                param.Direction = ParameterDirection.Input
-                param.Value = lXMLContents
-
-                param = .Parameters.Add("@order_num", SqlDbType.VarChar, 20)
-                param.Direction = ParameterDirection.InputOutput
-                param.Value = ""
-
-                param = .Parameters.Add("@acc_num", SqlDbType.VarChar, 30)
-                param.Direction = ParameterDirection.InputOutput
-                param.Value = ""
-
-                param = .Parameters.Add("@vendor_id", SqlDbType.VarChar, 30)
-                param.Direction = ParameterDirection.InputOutput
-                param.Value = ""
-
-                param = .Parameters.Add("@delivery_date_requested", SqlDbType.Date)
-                param.Direction = ParameterDirection.InputOutput
-                param.Value = Date.MinValue
-
-                param = .Parameters.Add("@delivery_date", SqlDbType.Date)
-                param.Direction = ParameterDirection.InputOutput
-                param.Value = Date.MinValue
-
-                param = .Parameters.Add("@datetime_created_string", SqlDbType.VarChar, 30)
-                param.Direction = ParameterDirection.InputOutput
-                param.Value = ""
-
-                param = .Parameters.Add("@status", SqlDbType.VarChar, 16)
-                param.Direction = ParameterDirection.InputOutput
-                param.Value = "ACCEPTED"
-
-                param = .Parameters.Add("@customer_order_header_id", SqlDbType.Int)
-                param.Direction = ParameterDirection.InputOutput
-                param.Value = 0
-
-                param = .Parameters.Add("@order_lines", SqlDbType.Int)
-                param.Direction = ParameterDirection.InputOutput
-                param.Value = 0
-
-                param = .Parameters.Add("@order_value", SqlDbType.Decimal)
-                param.Precision = 10
-                param.Scale = 4
-                param.Direction = ParameterDirection.InputOutput
-                param.Value = 0
-
-                param = .Parameters.Add("@err_msg", SqlDbType.VarChar, -1)
-                param.Direction = ParameterDirection.InputOutput
-                param.Value = ""
-
-                .ExecuteNonQuery()
-                lRetVal = CType(.Parameters("@ret").Value, Integer)
-
-                _OrderRequestId = .Parameters("@record_id").Value
-                _OrderNum = Nz(Of String)(.Parameters("@order_num").Value, "")
-                _AccNum = Nz(Of String)(.Parameters("@acc_num").Value, "")
-                _VendorID = Nz(Of String)(.Parameters("@vendor_id").Value, "")
-                _DeliveryDateRequested = Nz(Of Date)(.Parameters("@delivery_date_requested").Value, Date.MinValue)
-                _DeliveryDate = Nz(Of Date)(.Parameters("@delivery_date").Value, Date.MinValue)
-                _Status = Nz(Of String)(.Parameters("@status").Value, "")
-                _Order_DateTime_Created = Nz(Of String)(.Parameters("@datetime_created_string").Value, "")
-                _Order_Lines = Nz(Of Integer)(.Parameters("@order_lines").Value, 0)
-                _Order_Value = Nz(Of Decimal)(.Parameters("@order_value").Value, 0)
-
-                lNewOrderID = Nz(Of Integer)(.Parameters("@customer_order_header_id").Value, 0)
-
-                lErrMsg = Nz(Of String)(.Parameters("@err_msg").Value, "")
-
-                System.Threading.Thread.Sleep(20)
-
-                dt = GetOrderLines() ' No Need for order lines for FoodBuy_Online response (no response needed anyway), just for service email
-                Dim l_OK As Boolean = False
-                Select Case lRetVal
-                    Case 0 ' Success
-                        If _Status.StartsWith("MODIFIED") Then
-                            _Status = "MODIFIED"
-                        End If
-                        l_OK = CreateOrderResponse_Poundland(0, dt, lRetVal, "", "")
-
-                        If l_OK Then
-                            MyEventLog.WriteEntry("Order Response Created: " & _Status & " " & _OrderNum & " {" & _OrderRequestId & "} for " & _AccNum, EventLogEntryType.Information, GetEventID)
-                            If _Test_Mode Then
-                                _EmailServiceMessage(Date.Now & " ORDER RESPONSE CREATED: " & _Status & " " & _OrderNum & " {" & _OrderRequestId & "} for " & _AccNum)
-                            End If
-                            System.Threading.Thread.Sleep(50)
-
-                            Dim pAttachments As New ArrayList
-                            pAttachments.Add("\\wcm-exe-fp01\OfficeShare\Poundland\Email Attachment\West Country Milk - Poundland Service Level Agreement.pdf")
-
-                            If EmailOrder(lNewOrderID, pAttachments, "</br> </br> Please see attached SLA for this order") Then
-
-                            End If
-                        End If
-
-                        Return MsgBoxResult.Ok
-                    Case Else
-                        _Status = "REJECTED"
-                        Dim lRejectCode As String = lErrMsg
-                        If lErrMsg.Contains("~") Then
-                            lRejectCode = lErrMsg.Substring(0, lErrMsg.IndexOf("~"))
-                        End If
-
-                        If lErrMsg = "CUSTOMER_IDENTIFICATION_NUMBER_IS_INVALID" Then lErrMsg = " SUSPENDED ACCOUNT "
-                        MyEventLog.WriteEntry("Order Response Created: REJECTED " & _OrderNum & " {" & _OrderRequestId & "} for " & _AccNum & lErrMsg, EventLogEntryType.Warning, GetEventID)
-                        _EmailServiceMessage(Date.Now & " ORDER REJECTED: " & _OrderNum & " {" & _OrderRequestId & "} for " & _AccNum & lErrMsg)
-
-                        If CreateOrderResponse_Poundland(2, dt, lRetVal, lErrMsg, lRejectCode) Then
-
-                            Return MsgBoxResult.Abort
-                        End If
-                End Select
-            End With
-            cmd.Dispose()
-            l_DB.Close()
-        Catch ex As Exception
-            MyEventLog.WriteEntry("ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString, EventLogEntryType.Error, GetEventID)
-            _EmailServiceMessage(Date.Now & " " & "ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString, True)
-            If ex.Message.ToString.ToUpperInvariant.Contains("TIMEOUT EXPIRED") Then
-                Return MsgBoxResult.Retry
-            End If
-        Finally
-
-        End Try
-        Return MsgBoxResult.Abort
-    End Function
-
-    ''' <summary>
-    ''' 
-    ''' </summary>
-    ''' <param name="pOrderResponseType">1=Acknowledgement, 2=order confirmation, 3=order ASN</param>
-    ''' <returns></returns>
-    ''' <remarks> </remarks>
-    Private Function CreateOrderResponse_Poundland(pOrderResponseType As Integer, dtLines As DataTable, pErrCode As Integer, pErrMsg As String, pAdditionalInfo As String) As Boolean
-        Dim xmlWriter As XmlWriter = Nothing
-        Dim dtProcessDate As Date = Now
-        Dim l_File As String = ""
-        'Dim row As DataRow
-        Dim l_rowcount As Integer = 0
-        Dim dblActualTotalValue As Decimal = 0
-
-        Try
-            Select Case pOrderResponseType
-                'Case 1
-                '    l_File = "ACK_" & _OrderNum & ".XML"
-                '    If My.Settings.TestFoodBuy_Online Then l_Directory = My.Settings.FoodBuy_Online_OUT & "\" Else l_Directory = My.Settings.FoodBuy_Online_OUT & "\"
-                Case 2
-                    l_File = "OrderAck_" & _OrderNum & ".XML"
-                    ''Case 3 :
-            End Select
-
-            ' - FINISH CODING IF REQUIRED by Poundland
-            'If File.Exists(_RESPONSE_OUT & "\" & l_File) Then
-            '    File.Delete(_RESPONSE_OUT & "\" & l_File)
-            'End If
-
-            'xmlWriter = New XmlTextWriter(_RESPONSE_OUT & "\" & l_File, System.Text.Encoding.UTF8)
-
-            'If IsNothing(xmlWriter) Then
-            '    Return False
-            'End If
-
-            ''If dtLines IsNot Nothing Then
-            ''    For Each row In dtLines.Rows
-            ''        dblActualTotalValue += row("Qty") * Nz(Of Decimal)(row("Unit_Price"), 0)
-            ''    Next
-            ''End If
-
-            'With xmlWriter
-            '    .WriteStartDocument()
-            '    .WriteStartElement("tc:TrueCommerceOrderAck")
-            '    AddAttribute(xmlWriter, "xmlns:tc", "http://www.truecommerce.com/docs/orderAck")
-            '    AddAttribute(xmlWriter, "xmlns:cm", "http://www.truecommerce.com/docs/common/components")
-            '    AddAttribute(xmlWriter, "xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance")
-            '    AddAttribute(xmlWriter, "xsi:schemaLocation", "http://www.truecommerce.com/docs/orderAck truecommerce_orderack_v1.0.xsd")
-
-            '    .WriteStartElement("MsgHeader")
-
-            '    .WriteStartElement("MsgType") : .WriteString("ORDER_ACK") : .WriteEndElement()
-            '    .WriteStartElement("VersionID") : .WriteString("v1.0") : .WriteEndElement()
-            '    .WriteStartElement("TransmittedDate")
-            '    .WriteStartElement("Date") : .WriteString(Now.Date.ToString("yyyy-MM-dd")) : .WriteEndElement()
-            '    .WriteStartElement("Time") : .WriteString(Now.ToString("HH:mm:ss")) : .WriteEndElement()
-            '    .WriteEndElement()
-            '    .WriteStartElement("FileDate")
-            '    .WriteStartElement("Date") : .WriteString(Now.Date.ToString("yyyy-MM-dd")) : .WriteEndElement()
-            '    .WriteStartElement("Time") : .WriteString(Now.ToString("HH:mm:ss")) : .WriteEndElement()
-            '    .WriteEndElement()
-            '    .WriteStartElement("Interchange")
-            '    .WriteStartElement("Standard") : .WriteString("TRUECOMMERCE") : .WriteEndElement()
-            '    .WriteStartElement("SenderRef") : .WriteString("0000") : .WriteEndElement() 'Sender Transmission reference 
-            '    .WriteEndElement()
-
-            '    .WriteEndElement() ' End of MsgHeader
-
-            '    .WriteStartElement("Document")
-
-            '    .WriteStartElement("DocHeader")
-
-            '    .WriteStartElement("DocType") : .WriteString("ORDER_ACK") : .WriteEndElement()
-            '    .WriteStartElement("DocFunction") : .WriteString("ORIGINAL") : .WriteEndElement()
-
-            '    .WriteStartElement("CustAddr")
-            '    .WriteStartElement("Code") : .WriteString(_AccNum) : .WriteEndElement()
-            '    .WriteStartElement("EAN13") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Name") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Address1") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Address5") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Country") : .WriteString("") : .WriteEndElement() ' get from original order if require
-            '    .WriteStartElement("VAT")
-            '    .WriteStartElement("Num") : .WriteString("") : .WriteEndElement() ' Customer VAT number  from original order if required
-            '    .WriteEndElement() ' End of VAT
-
-            '    .WriteStartElement("Contact1")
-            '    .WriteStartElement("Name") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Phone") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Fax") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteEndElement() ' End of Contact1
-            '    .WriteStartElement("Contact2")
-            '    .WriteStartElement("Name") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Phone") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteEndElement() ' End of Contact2
-
-            '    .WriteEndElement() ' End of CustAddr
-
-            '    .WriteStartElement("SuppAddr")
-            '    .WriteStartElement("Code") : .WriteString("") : .WriteEndElement() ' ??
-            '    .WriteStartElement("EAN13") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Name") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Address1") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Address2") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Address5") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("PostCode") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Country") : .WriteString("") : .WriteEndElement() ' get from original order if required
-
-            '    .WriteStartElement("VAT")
-            '    .WriteStartElement("Num") : .WriteString("") : .WriteEndElement() ' Customer VAT number  from original order if required
-            '    .WriteStartElement("Alpha") : .WriteString("") : .WriteEndElement() ' Customer VAT number  from original order if required
-            '    .WriteEndElement() ' End of VAT
-
-            '    .WriteStartElement("Contact1")
-            '    .WriteStartElement("Name") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Phone") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Email") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Fax") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteEndElement() ' End of Contact1
-            '    .WriteStartElement("Contact2")
-            '    .WriteStartElement("Name") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Phone") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Email") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Fax") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteEndElement() ' End of Contact2
-
-            '    .WriteEndElement() ' End of SuppAddr
-
-            '    .WriteStartElement("DocDate")
-            '    .WriteStartElement("Date") : .WriteString(Now.Date.ToString("yyyy-MM-dd")) : .WriteEndElement()
-            '    .WriteStartElement("Time") : .WriteString(Now.ToString("HH:mm:ss")) : .WriteEndElement()
-            '    .WriteEndElement() ' End of DocDate
-
-            '    .WriteStartElement("TranInfo") : .WriteEndElement()
-
-            '    .WriteStartElement("RoutingCode") : .WriteString("") : .WriteEndElement() ' - what is it?
-
-            '    .WriteEndElement() ' End of DocHeader
-
-
-            '    .WriteStartElement("AckHeader")
-            '    .WriteStartElement("AckCode") : .WriteString(_Status) : .WriteEndElement()
-
-            '    .WriteStartElement("Ack_Date")
-            '    .WriteStartElement("Date") : .WriteString(Now.Date.ToString("yyyy-MM-dd")) : .WriteEndElement()
-            '    .WriteStartElement("Time") : .WriteString(Now.ToString("HH:mm:ss")) : .WriteEndElement()
-            '    .WriteEndElement()
-
-            '    .WriteStartElement("CustOrder") : .WriteString(_OrderNum) : .WriteEndElement()
-
-            '    .WriteStartElement("CustOrderDate")
-            '    If IsDate(_Order_DateTime_Created) Then
-            '        .WriteStartElement("Date") : .WriteString(CType(_Order_DateTime_Created, Date).ToString("yyyy-MM-dd")) : .WriteEndElement()
-            '        .WriteStartElement("Time") : .WriteString(CType(_Order_DateTime_Created, Date).ToString("HH:mm:ss")) : .WriteEndElement()
-            '    Else
-            '        .WriteStartElement("Date") : .WriteString(Now.Date.ToString("yyyy-MM-dd")) : .WriteEndElement()
-            '        .WriteStartElement("Time") : .WriteString(Now.ToString("HH:mm:ss")) : .WriteEndElement()
-            '    End If
-            '    .WriteEndElement()
-
-            '    .WriteStartElement("SuppOrder") : .WriteString("") : .WriteEndElement() ' get from original order if required       SO0010004
-            '    .WriteStartElement("Perishable") : .WriteString("") : .WriteEndElement() ' get from original order if required      false
-            '    .WriteStartElement("BookingRef") : .WriteString("") : .WriteEndElement() ' get from original order if required      BR-001-0004
-            '    .WriteStartElement("OrigCustOrder") : .WriteString("") : .WriteEndElement() ' get from original order if required   OCR-001-0004
-
-
-            '    .WriteStartElement("Delivery")
-
-            '    .WriteStartElement("DelMethod") : .WriteString("DELIVER_TO_DEPOT") : .WriteEndElement()
-
-            '    .WriteStartElement("ReqDesp")
-            '    .WriteStartElement("Date") : .WriteString(_DeliveryDate.ToString("yyyy-MM-dd")) : .WriteEndElement()
-            '    .WriteStartElement("Time") : .WriteString("21:59:00") : .WriteEndElement() ' - read from original order ??
-            '    .WriteEndElement()
-            '    .WriteStartElement("EarliestDesp")
-            '    .WriteStartElement("Date") : .WriteString(_DeliveryDate.ToString("yyyy-MM-dd")) : .WriteEndElement()
-            '    .WriteStartElement("Time") : .WriteString("22:59:00") : .WriteEndElement() ' - read from original order ??
-            '    .WriteEndElement()
-            '    .WriteStartElement("LatestDesp")
-            '    .WriteStartElement("Date") : .WriteString(_DeliveryDate.ToString("yyyy-MM-dd")) : .WriteEndElement()
-            '    .WriteStartElement("Time") : .WriteString("22:59:00") : .WriteEndElement() ' - read from original order ??
-            '    .WriteEndElement()
-            '    .WriteStartElement("ReqDel")
-            '    .WriteStartElement("Date") : .WriteString(_DeliveryDate.ToString("yyyy-MM-dd")) : .WriteEndElement()
-            '    .WriteStartElement("Time") : .WriteString("22:59:00") : .WriteEndElement() ' - read from original order ??
-            '    .WriteEndElement()
-            '    .WriteStartElement("EarliestDel")
-            '    .WriteStartElement("Date") : .WriteString(_DeliveryDate.ToString("yyyy-MM-dd")) : .WriteEndElement()
-            '    .WriteStartElement("Time") : .WriteString("22:59:00") : .WriteEndElement() ' - read from original order ??
-            '    .WriteEndElement()
-            '    .WriteStartElement("LatestDel")
-            '    .WriteStartElement("Date") : .WriteString(_DeliveryDate.ToString("yyyy-MM-dd")) : .WriteEndElement()
-            '    .WriteStartElement("Time") : .WriteString("22:59:00") : .WriteEndElement() ' - read from original order ??
-            '    .WriteEndElement()
-
-            '    .WriteStartElement("DespatchFrom")
-            '    .WriteStartElement("Code") : .WriteString("") : .WriteEndElement() ' ??
-            '    .WriteStartElement("EAN13") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Name") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Address1") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Address2") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Address5") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("PostCode") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Country") : .WriteString("") : .WriteEndElement() ' get from original order if required
-
-            '    .WriteStartElement("VAT")
-            '    .WriteStartElement("Num") : .WriteString("") : .WriteEndElement() ' Customer VAT number  from original order if required
-            '    .WriteStartElement("Alpha") : .WriteString("") : .WriteEndElement() ' Customer VAT number  from original order if required
-            '    .WriteEndElement() ' End of VAT
-
-            '    .WriteStartElement("Contact1")
-            '    .WriteStartElement("Name") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Phone") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Email") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Fax") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteEndElement() ' End of Contact1
-            '    .WriteStartElement("Contact2")
-            '    .WriteStartElement("Name") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Phone") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Email") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Fax") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteEndElement() ' End of Contact2
-
-            '    .WriteEndElement() ' End of DespatchFrom
-
-            '    .WriteStartElement("DeliverTo")
-            '    .WriteStartElement("Code") : .WriteString("") : .WriteEndElement() ' ??
-            '    .WriteStartElement("EAN13") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Name") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Address1") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Address2") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Address5") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("PostCode") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Country") : .WriteString("") : .WriteEndElement() ' get from original order if required
-
-            '    .WriteStartElement("VAT")
-            '    .WriteStartElement("Num") : .WriteString("") : .WriteEndElement() ' Customer VAT number  from original order if required
-            '    .WriteStartElement("Alpha") : .WriteString("") : .WriteEndElement() ' Customer VAT number  from original order if required
-            '    .WriteEndElement() ' End of VAT
-
-            '    .WriteStartElement("Contact1")
-            '    .WriteStartElement("Name") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Phone") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Fax") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteEndElement() ' End of Contact1
-            '    .WriteStartElement("Contact2")
-            '    .WriteStartElement("Name") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Phone") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteEndElement() ' End of Contact2
-
-            '    .WriteEndElement() ' End of DeliverTo
-
-            '    .WriteStartElement("Instructions")
-            '    .WriteStartElement("Line1") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteEndElement()
-
-            '    .WriteStartElement("DelCombined") : .WriteString("false") : .WriteEndElement()
-
-            '    .WriteEndElement() 'End of Delivery
-
-            '    .WriteStartElement("Locations")
-
-            '    .WriteStartElement("OrderBranch")
-            '    .WriteStartElement("Code") : .WriteString("") : .WriteEndElement() ' ??
-            '    .WriteStartElement("EAN13") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Name") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Address1") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Address5") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Country") : .WriteString("") : .WriteEndElement() ' get from original order if required
-
-            '    .WriteStartElement("VAT")
-            '    .WriteStartElement("Num") : .WriteString("") : .WriteEndElement() ' Customer VAT number  from original order if required
-            '    .WriteStartElement("Alpha") : .WriteString("") : .WriteEndElement() ' Customer VAT number  from original order if required
-            '    .WriteEndElement() ' End of VAT
-
-            '    .WriteStartElement("Contact1")
-            '    .WriteStartElement("Name") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Phone") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Fax") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteEndElement() ' End of Contact1
-            '    .WriteStartElement("Contact2")
-            '    .WriteStartElement("Name") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Phone") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteEndElement() ' End of Contact2
-
-            '    .WriteEndElement() 'End of OrderBranch
-
-
-            '    .WriteStartElement("InvoiceTo")
-            '    .WriteStartElement("Code") : .WriteString("") : .WriteEndElement() ' ??
-            '    .WriteStartElement("Name") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Address1") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Address5") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Country") : .WriteString("") : .WriteEndElement() ' get from original order if required
-
-            '    .WriteStartElement("VAT")
-            '    .WriteStartElement("Num") : .WriteString("") : .WriteEndElement() ' Customer VAT number  from original order if required
-            '    .WriteStartElement("Alpha") : .WriteString("") : .WriteEndElement() ' Customer VAT number  from original order if required
-            '    .WriteEndElement() ' End of VAT
-
-            '    .WriteStartElement("Contact1")
-            '    .WriteStartElement("Name") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Phone") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Fax") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteEndElement() ' End of Contact1
-            '    .WriteStartElement("Contact2")
-            '    .WriteStartElement("Name") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Phone") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteEndElement() ' End of Contact2
-
-            '    .WriteEndElement() ' End of InvoiceTo
-
-            '    .WriteStartElement("InvoiceFrom")
-            '    .WriteStartElement("Code") : .WriteString("") : .WriteEndElement() ' ??
-            '    .WriteStartElement("Name") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Address1") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Address2") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Address5") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("PostCode") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Country") : .WriteString("") : .WriteEndElement() ' get from original order if required
-
-            '    .WriteStartElement("VAT")
-            '    .WriteStartElement("Num") : .WriteString("") : .WriteEndElement() ' Customer VAT number  from original order if required
-            '    .WriteStartElement("Alpha") : .WriteString("") : .WriteEndElement() ' Customer VAT number  from original order if required
-            '    .WriteEndElement() ' End of VAT
-
-            '    .WriteStartElement("Contact1")
-            '    .WriteStartElement("Name") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Phone") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Email") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Fax") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteEndElement() ' End of Contact1
-            '    .WriteStartElement("Contact2")
-            '    .WriteStartElement("Name") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Phone") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Email") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteStartElement("Fax") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteEndElement() ' End of Contact2
-
-            '    .WriteEndElement() ' End of InvoiceFrom
-
-            '    .WriteEndElement() 'End of Locations
-
-            '    .WriteStartElement("Notes")
-            '    .WriteStartElement("Seq") : .WriteString("1") : .WriteEndElement()
-            '    .WriteStartElement("Narrative")
-            '    .WriteStartElement("Line1") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '    .WriteEndElement() 'End of Narrative
-            '    .WriteEndElement() ' End of Notes
-
-            '    .WriteStartElement("PricingDate")
-            '    .WriteStartElement("Date") : .WriteString(Now.Date.ToString("yyyy-MM-dd")) : .WriteEndElement()
-            '    .WriteStartElement("Time") : .WriteString("00:00:00")) : .WriteEndElement()
-            '    .WriteEndElement()
-
-            '    .WriteEndElement() ' End of AckHeader
-
-            '    If dtLines IsNot Nothing Then
-            '        For Each row In dtLines.Rows
-            '            l_rowcount += 1
-            '            .WriteStartElement("AckLine")
-
-            '            .WriteStartElement("LineNo") : .WriteString(row("Line_Seq").ToString) : .WriteEndElement()
-            '            .WriteStartElement("LineCode") : .WriteString(If(_Status <> "REJECTED", "ACCEPTED", _Status)) : .WriteEndElement()
-
-            '            .WriteStartElement("OriginalRequirements")
-            '            .WriteStartElement("Item")
-
-            '            .WriteStartElement("CustItem")
-            '            .WriteStartElement("OwnBrandEAN") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '            .WriteStartElement("Code") : .WriteString(row("Product_Code_Requested")) : .WriteEndElement()
-            '            .WriteStartElement("SKU") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '            .WriteEndElement() 'End of CustItem
-
-            '            .WriteStartElement("SuppItem")
-            '            .WriteStartElement("Code") : .WriteString(row("Product_Code_Requested")) : .WriteEndElement()
-            '            .WriteStartElement("EAN13") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '            .WriteStartElement("EAN12") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '            .WriteStartElement("DUN14") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '            .WriteStartElement("ISBN") : .WriteString("") : .WriteEndElement() ' get from original order if required
-            '            .WriteStartElement("Desc1") : .WriteString("") : .WriteEndElement() ' get from original order if required
-
-            '            .WriteEndElement() 'End of SuppItem
-
-            '            .WriteStartElement("RetailEAN") : .WriteString("") : .WriteEndElement()
-            '            .WriteStartElement("Desc1") : .WriteString(row("Product_Code_Requested")) : .WriteEndElement()
-            '            .WriteEndElement() 'Item
-
-            '            .WriteStartElement("Perishable") : .WriteString("false") : .WriteEndElement()
-
-            '            .WriteStartElement("UnitOfOrder")
-            '            .WriteStartElement("Unit") : .WriteString("1") : .WriteEndElement()
-            '            .WriteStartElement("OrderMeasure") : .WriteString("0") : .WriteEndElement()
-            '            .WriteEndElement() 'End of UnitOfOrder
-
-            '            .WriteStartElement("OrderQty")
-            '            .WriteStartElement("Unit") : .WriteString(row("Qty").ToString) : .WriteEndElement()
-            '            .WriteStartElement("UOM") : .WriteString("EA") : .WriteEndElement()
-            '            .WriteEndElement() 'End of OrderQty
-
-            '            .WriteStartElement("PricingMeasure")
-            '            .WriteStartElement("Measure") : .WriteString("EA") : .WriteEndElement()
-            '            .WriteStartElement("MeasureQty") : .WriteString("1") : .WriteEndElement()
-            '            .WriteEndElement() 'End of PricingMeasure
-
-            '            '              
-
-            '            ''.WriteString(row("Product_Code")) 
-
-            '            .WriteEndElement() 'OriginalRequirements
-
-            '            '.WriteStartElement("Quantity") : .WriteString(row("Qty").ToString) : .WriteEndElement() 'NOTE Qty 0 = can not supply this item and no substitude available
-            '            '.WriteStartElement("UnitPrice") : .WriteString(Nz(Of Decimal)(row("Unit_Price"), 0).ToString("0.00")) : .WriteEndElement()
-            '            '.WriteStartElement("LinePrice") : .WriteString((Nz(Of Decimal)(row("Unit_Price"), 0) * CType(row("Qty"), Decimal)).ToString("0.00")) : .WriteEndElement()
-
-            '            'If row("Product_Code").ToString.Length = 0 Then
-            '            '    .WriteStartElement("LineStatus") : .WriteString("OS") : .WriteEndElement()
-            '            'ElseIf row("Product_Code_Requested") <> row("Product_Code") Then
-            '            '    .WriteStartElement("SubstitutedProduct")
-            '            '    .WriteString(row("Product_Code"))
-            '            '    .WriteEndElement() 'SubstitutedProduct
-            '            '    .WriteStartElement("LineStatus") : .WriteString("OOS") : .WriteEndElement()
-            '            'Else
-            '            '    .WriteStartElement("LineStatus") : .WriteEndElement()
-            '            'End If
-
-            '            '.WriteStartElement("UnitOfMeasure") : .WriteString(row("UOM")) : .WriteEndElement()
-
-            '            .WriteEndElement() 'AckLine
-            '        Next
-            '    End If
-
-            '    .WriteStartElement("DocTrailer")
-            '    .WriteStartElement("TotalLines") : .WriteString(_Order_Lines) : .WriteEndElement()
-            '    .WriteEndElement()
-
-            '    '    .WriteEndElement() '/LineItems
-
-            '    .WriteEndElement() ' End of <Document>
-
-            '    .WriteStartElement("MsgTrailer")
-            '    .WriteStartElement("TotalDocs") : .WriteString("1") : .WriteEndElement()
-            '    .WriteEndElement()
-
-            '    .WriteEndElement() ' End of tc:TrueCommerceOrderAck
-            '    .WriteEndDocument()
-            '    .Flush()
-            '    .Close()
-
-            'End With
-
-
-            If UpdateAcknowledgementDate() = 0 Then
-                'MoveFile( _RESPONSE_OUT & "\" & l_File, _RESPONSE_ARCHIVED & "\" & l_File)
-            End If
-
-
-            If pOrderResponseType = 2 Then
-                'MoveFile(_RESPONSE_OUT & "\" & l_File, _RESPONSE_ARCHIVED & "\" & l_File)
-
-                If _Status.Equals("REJECTED", StringComparison.CurrentCultureIgnoreCase) Then
-                    Select Case pErrCode
-                        ' 1=Customer account on stop; 2=Customer account is not recognised; 3=Delivery date changed
-                        Case 6 ' 'CUSTOMER_IDENTIFICATION_NUMBER_DOES_NOT_EXIST'
-                            _EmailServiceMessage("REJECTED: " & _OrderNum & "   " & _AccNum & "  {CUSTOMER_IDENTIFICATION_NUMBER_DOES_NOT_EXIST}", True)
-                        Case 7 'DELIVERY_SLOT_MISSED'
-                            _EmailServiceMessage("REJECTED: " & _OrderNum & "   " & _AccNum & "  {DELIVERY_SLOT_MISSED}  " & _DeliveryDateRequested, True)
-                        Case Else
-                            _EmailServiceMessage("REJECTED: " & _OrderNum & "   " & _AccNum & "  " & pErrCode & " - " & pErrMsg, True)
-                    End Select
-                ElseIf pOrderResponseType = 1 Then
-                    If _Status.Equals("MODIFIED", StringComparison.CurrentCultureIgnoreCase) Then
-                        If DateDiff(DateInterval.Day, _DeliveryDateRequested, _DeliveryDate) <> 0 Then
-                            _EmailServiceMessage("MODIFIED: " & _OrderNum & "   " & _AccNum & "  {DELIVERY_DATE_CHANGED}  " & _DeliveryDateRequested & " --> " & _DeliveryDate, True)
-                        Else
-                            _EmailServiceMessage("MODIFIED: " & _OrderNum & "   " & _AccNum & "  {MODIFIED ORDER LINES}  requested: " & _Order_Lines.ToString & "  ordered:" & l_rowcount.ToString, True)
-                        End If
-                    End If
-                End If
-            End If
-
-            Return True
-
-        Catch ex As Exception
-            _EmailServiceMessage(Date.Now & " " & "ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString, True)
-        End Try
-        Return False
-
-    End Function
-
-#End Region
-
 #Region "Methods CSV - CN_CrunchTime --------------------------------------------------------------"
     Private Sub Process_CN_CrunchTime()
         Dim asFiles() As String
@@ -2469,7 +1760,6 @@ Public Class WCMOrdering
                                 MyEventLog.WriteEntry("Order Response Created: " & _Status & " " & _OrderNum & " {" & _OrderRequestId & "} for " & _AccNum, EventLogEntryType.Information, GetEventID)
                                 ' _EmailServiceMessage(Date.Now & " ORDER RESPONSE CREATED: " & _Status & " " & _OrderNum & " {" & _OrderRequestId & "} for " & _AccNum & vbNewLine & vbNewLine & lResponseMsg)
                             End If
-                            EmailOrder(lNewOrderID)
                             Return MsgBoxResult.Ok
                         Case 5555
                             MyEventLog.WriteEntry("ERROR: " & lErrMsg & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString, EventLogEntryType.Error, GetEventID)
@@ -2502,7 +1792,6 @@ Public Class WCMOrdering
                                 '  _EmailServiceMessage(Date.Now & " ORDER RESPONSE CREATED: " & _Status & " " & _OrderNum & " {" & _OrderRequestId & "} for " & _AccNum & vbNewLine & vbNewLine & lResponseMsg)
                             End If
                             System.Threading.Thread.Sleep(50)
-                            EmailOrder(lNewOrderID)
 
                             Return MsgBoxResult.Ok
                         Case 5555
@@ -2645,7 +1934,6 @@ Public Class WCMOrdering
 
         End Try
     End Function
-
     Private Function CreateOrderResponse_CN_CrunchTime(dtLines As DataTable, pErrCode As Integer, pErrMsg As String, ByRef pResponse As String) As Boolean
         Dim writer As StreamWriter = Nothing _
             , l_File As String _
@@ -2713,7 +2001,6 @@ Public Class WCMOrdering
     End Function
 
 #End Region
-
 
 #Region "Methods BOURNE--------------------------------------------------------------"
 
@@ -2869,8 +2156,6 @@ Public Class WCMOrdering
                         _EmailServiceMessage(Date.Now & " ORDER Processed: " & _Status & " " & _OrderNum & " {" & _OrderRequestId & "} for " & _AccNum & vbNewLine & vbNewLine & lResponseMsg)
                         ''       End If
                     End If
-                    System.Threading.Thread.Sleep(50)
-                    EmailOrder(lNewOrderID)
                     Return MsgBoxResult.Ok
                 Case Else
                     _Status = "REJECTED"
@@ -3025,7 +2310,6 @@ Public Class WCMOrdering
 #End Region
 
 #Region "Methods INTERSERVE SAFFRON --------------------------------------------------------------"
-
     Private Sub Process_Interserve()
         Dim asFiles() As String
         Dim l_File As String
@@ -3083,7 +2367,6 @@ Public Class WCMOrdering
         Dim lArgeementCode As String = String.Empty
         Dim lNewOrderID As Integer = 0
         Dim lCustomerCode As String = ""
-        Dim lDNPrefix As String = ""
 
         Try
             l_DB.Open()
@@ -3200,8 +2483,6 @@ Public Class WCMOrdering
                             _EmailServiceMessage(Date.Now & " ORDER Processed: " & _Status & " " & _OrderNum & " {" & _OrderRequestId & "} for " & _AccNum & vbNewLine & vbNewLine & lResponseMsg)
                         End If
                     End If
-                    System.Threading.Thread.Sleep(50)
-                    EmailOrder(lNewOrderID)
                     Return MsgBoxResult.Ok
                 Case Else
                     _Status = "REJECTED"
@@ -3228,15 +2509,13 @@ Public Class WCMOrdering
         End Try
         Return MsgBoxResult.Abort
     End Function
-    Private Function Process_Saffron_ASN() As MsgBoxResult
-        Return Process_Saffron_ASN(Date.Today)
-    End Function
+
     ''' <summary>
     ''' 'process  ASN for Standing Orders (sub-buying group Debra, System generated Daily SO from  standing orders for these site, WCM needs to generate and supplly ASN to Saffron to match order/delivery note numbers on invoices.=))
     ''' 
     ''' </summary>
     ''' <returns></returns>
-    Private Function Process_Saffron_ASN(pDate As Date) As MsgBoxResult
+    Private Function Process_Saffron_ASN(pDate As Date, Optional pBackDated As Boolean = False) As MsgBoxResult
         Dim l_DB = New DB
         Dim param As SqlClient.SqlParameter
         Dim cmd As SqlClient.SqlCommand
@@ -3252,13 +2531,13 @@ Public Class WCMOrdering
         Dim lAmendmentID As Integer = 0
         Dim lSOHID As Integer = 0
         Dim lCustomerCode As String = ""
-        Dim lDNPrefix As String = ""
+        Dim lInvoiceNum As String = ""
 
         Try
             _DeliveryDate = pDate
             l_DB.Open()
 
-            cmd = l_DB.SqlCommand("p_SO_ASN_get_list")
+            cmd = l_DB.SqlCommand("p_SO_ASN_get_list_inv")
             With cmd
                 .CommandType = Data.CommandType.StoredProcedure
 
@@ -3298,15 +2577,19 @@ Public Class WCMOrdering
                     lArgeementCode = row("agreement_code")
                     lCustomerCode = row("customer_code")
 
+                    If pBackDated Then
+                        lInvoiceNum = Nz(Of String)(row("invoice_num"), "")
+                    End If
+
                     If lSOHID <> 0 Then
                         dt_Lines = GetSOLines(lSOHID, _DeliveryDate)
                     Else
                         dt_Lines = GetSOAmendmentLines(lAmendmentID)
                     End If
-                    If CreateASN_Saffron(2, lCustomerLocationCode, lUnitCode, lArgeementCode, dt_Lines, lRetVal, "", lResponseMsg, lCustomerCode) Then
+                    If CreateASN_Saffron(2, lCustomerLocationCode, lUnitCode, lArgeementCode, dt_Lines, lRetVal, "", lResponseMsg, lCustomerCode, lInvoiceNum) Then
                         If dt_Lines.Rows.Count > 0 Then
                             'create additional  ASN for dual supply order
-                            CreateASN_Saffron(2, lCustomerLocationCode, lUnitCode, lArgeementCode, dt_Lines, lRetVal, "", lResponseMsg, lCustomerCode)
+                            CreateASN_Saffron(2, lCustomerLocationCode, lUnitCode, lArgeementCode, dt_Lines, lRetVal, "", lResponseMsg, lCustomerCode, lInvoiceNum)
                         End If
                         MyEventLog.WriteEntry("ASN Processed: " & _Status & " " & _OrderNum & " {SO} for " & _AccNum, EventLogEntryType.Information, GetEventID)
                     End If
@@ -3314,8 +2597,6 @@ Public Class WCMOrdering
                 Next
 
             End With
-
-
 
 
             '_Status = "REJECTED"
@@ -3350,7 +2631,7 @@ Public Class WCMOrdering
     ''' <returns></returns>
     ''' <remarks> </remarks>
     Private Function CreateASN_Saffron(pOrderResponseType As Integer, pCustomerLocationCode As String, pUnitCode As String, pArgeementCode As String, ByRef dtLines As DataTable, pErrCode As Integer _
-            , pErrMsg As String, ByRef pResponse As String, ByVal pCustomerCode As String) As Boolean
+            , pErrMsg As String, ByRef pResponse As String, ByVal pCustomerCode As String, Optional ByVal pInvoiceNum As String = "") As Boolean
 
         Dim xmlWriter As XmlWriter = Nothing
         Dim dtProcessDate As Date = Now
@@ -3360,9 +2641,19 @@ Public Class WCMOrdering
         Dim idx As Integer
 
         Try
-            If dtLines IsNot Nothing Then
-                If dtLines.Rows.Count > 0 Then
-                    l_DN = dtLines.Rows(0)("del_note_num")
+
+            If String.IsNullOrEmpty(pInvoiceNum) Then
+                If dtLines IsNot Nothing Then
+                    If dtLines.Rows.Count > 0 Then
+                        l_DN = dtLines.Rows(0)("del_note_num")
+                    End If
+                End If
+            Else
+                l_DN = "DN_" & pInvoiceNum & "_" & DatePart(DateInterval.Weekday, _DeliveryDate, FirstDayOfWeek.Sunday).ToString
+                If dtLines IsNot Nothing Then
+                    If dtLines.Rows.Count > 0 Then
+                        dtLines.Rows(0)("del_note_num") = l_DN
+                    End If
                 End If
             End If
 
@@ -3419,7 +2710,9 @@ Public Class WCMOrdering
                 .WriteStartElement("SuppliersOrderNumber") : .WriteString(_OrderNum) : .WriteEndElement()
 
                 .WriteStartElement("DateOrderReceivedBySupplier") : .WriteString(Date.Today.ToString("yyyyMMdd")) : .WriteEndElement()
+                ''.WriteStartElement("DateOrderReceivedBySupplier") : .WriteString(DateAdd(DateInterval.Day, -1, _DeliveryDate).ToString("yyyyMMdd")) : .WriteEndElement()
 
+                '' .WriteStartElement("DateOrderReceivedBySupplier") : .WriteString(_DeliveryDate.ToString("yyyyMMdd")) : .WriteEndElement() '' TODO - change from above when using invoice_num for DN
                 '' .WriteStartElement("DeliveryNoteNumber") : .WriteString("DN_" & _OrderNum) : .WriteEndElement()
                 .WriteStartElement("DeliveryNoteNumber") : .WriteString(l_DN) : .WriteEndElement() 'replaced above line by VS on 31/05/2023
                 .WriteStartElement("DeliveryNoteDate") : .WriteString(_DeliveryDate) : .WriteEndElement()
@@ -3506,16 +2799,22 @@ Public Class WCMOrdering
 
 
             If pOrderResponseType = 2 Then
-                If _OrderRequestId <> 0 Then UpdateAcknowledgementDate()
+                If Not _Test_Mode Then If _OrderRequestId <> 0 Then UpdateAcknowledgementDate()
 
                 My.Computer.FileSystem.RenameFile(_RESPONSE_OUT & "\" & l_File_UPL, l_File_CON)
-                File.Copy(_RESPONSE_OUT & "\" & l_File_CON, _RESPONSE_ARCHIVED & "\" & l_File_CON, True)
+                If Not _Test_Mode Then File.Copy(_RESPONSE_OUT & "\" & l_File_CON, _RESPONSE_ARCHIVED & "\" & l_File_CON, True)
             End If
             Return True
 
         Catch ex As Exception
             MyEventLog.WriteEntry("ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString, EventLogEntryType.Error, GetEventID)
-            _EmailServiceMessage(Date.Now & " " & "ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString, True)
+            If Not _Test_Mode Then
+                _EmailServiceMessage(Date.Now & " " & "ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString, True)
+            End If
+            If Not xmlWriter Is Nothing Then
+                xmlWriter.Flush()
+                xmlWriter.Close()
+            End If
         End Try
         Return False
 
@@ -3524,7 +2823,6 @@ Public Class WCMOrdering
 #End Region
 
 #Region "Methods Delivery Notes Grahams--------------------------------------------------------------"
-
     Private Sub Process_DN_Grahams()
         Dim asFiles() As String
         Dim l_File As String
@@ -3692,9 +2990,7 @@ Public Class WCMOrdering
 
 #End Region
 
-
 #Region "Orders Summary for Customers:  JJWilson --------------------------------------------------------------"
-
     Private Sub Process_JJWison()
 
         If DateDiff(DateInterval.Day, _JJWilson_done, Now.Date) = 0 Then Return
@@ -3773,7 +3069,6 @@ Public Class WCMOrdering
     End Function
 #End Region
 #Region "Methods DairyData Orders CSV : AllanReeder, FreshPastures,  JNDairies, DHT, Johal, Paynes, Broadland, Chew Valley(transmission not completed), Medina --------------------------------------------------------------"
-
     Private Sub Process_AllanReeder()
 
         If DateDiff(DateInterval.Day, _AR_done, Now.Date) = 0 Then Return
@@ -3874,8 +3169,9 @@ Public Class WCMOrdering
             Case DayOfWeek.Sunday
                 Return
             Case DayOfWeek.Saturday
-                lHour = 12
-                l_DateShift = 2
+                Return
+                'lHour = 12
+                'l_DateShift = 2
             Case Else
         End Select
 
@@ -3890,10 +3186,58 @@ Public Class WCMOrdering
                                       l_Body, _ORDER_OUT & "\" & l_File, "NoReply@wcmilk.co.uk", False, "")
 
 
-                    System.Threading.Thread.Sleep(500)
+                    System.Threading.Thread.Sleep(3000)
                     MoveFile(_ORDER_OUT & "\" & l_File, _ORDER_ARCHIVED & "\" & l_File)
 
                     _Johal_done = Now.Date
+                End If
+                If Date.Now.DayOfWeek = DayOfWeek.Friday Then
+                    l_DateShift = 3
+                    If Export_DairyData("Johal_", True) Then
+                        Dim l_File As String = "Johal_" & DateAdd(DateInterval.Day, 3, Date.Today).ToString("yyyy-MM-dd") & ".csv"
+                        Dim l_Body As String = "Please find attached orders placed for delivery on " & DateAdd(DateInterval.Day, 3, Date.Today).ToString("dd MMM yyyy")
+
+                        Email_Generic(My.Settings.Johal_Order_Email, "", "Westcountry Milk Order for " & DateAdd(DateInterval.Day, 3, Date.Today).ToString("dd MMM yyyy"),
+                                          l_Body, _ORDER_OUT & "\" & l_File, "NoReply@wcmilk.co.uk", False, "")
+
+
+                        System.Threading.Thread.Sleep(3000)
+                        MoveFile(_ORDER_OUT & "\" & l_File, _ORDER_ARCHIVED & "\" & l_File)
+
+                    End If
+                End If
+            End If
+        End If
+    End Sub
+
+    Private Sub Process_Freshways()
+        Dim lHour As Integer = 13, lMinute As Integer = 40, l_DateShift As Integer = 1
+        If DateDiff(DateInterval.Day, _Freshways_done, Now.Date) = 0 Then Return
+
+        Select Case Date.Now.DayOfWeek
+            Case DayOfWeek.Sunday
+                Return
+            Case DayOfWeek.Saturday
+                lHour = 12
+                l_DateShift = 2
+            Case Else
+        End Select
+
+        If Date.Now.Hour = lHour AndAlso Date.Now.Minute > lMinute AndAlso Date.Now.Minute < lMinute + 5 Then
+            If GetSetting_Freshways() Then
+                'We only need to run this once a day at the depots cut off
+                If Export_DairyData("Freshways_") Then
+                    Dim l_File As String = "Freshways_" & DateAdd(DateInterval.Day, l_DateShift, Date.Today).ToString("yyyy-MM-dd") & ".csv"
+                    Dim l_Body As String = "Please find attached orders placed for delivery on " & DateAdd(DateInterval.Day, l_DateShift, Date.Today).ToString("dd MMM yyyy")
+
+                    'Email_Generic(My.Settings.Freshways_order_email, "", "Westcountry Milk Order for " & DateAdd(DateInterval.Day, l_DateShift, Date.Today).ToString("dd MMM yyyy"),
+                    '                  l_Body, _ORDER_OUT & "\" & l_File, "NoReply@wcmilk.co.uk", False, "")
+
+
+                    System.Threading.Thread.Sleep(1500)
+                    MoveFile(_ORDER_OUT & "\" & l_File, _ORDER_ARCHIVED & "\" & l_File)
+
+                    _Freshways_done = Now.Date
                 End If
             End If
         End If
@@ -3938,11 +3282,11 @@ Public Class WCMOrdering
 
 
         If Date.Now.DayOfWeek = DayOfWeek.Friday AndAlso pFridayForMonday Then
-            l_DateShift = 3 'Get the orders for Monday
+            l_DateShift = 3 'Get orders for Monday
         ElseIf Date.Now.DayOfWeek = DayOfWeek.Saturday Then
-            l_DateShift = 2 'Get the orders for Monday
+            l_DateShift = 2 'Get orders for Monday
         Else
-            l_DateShift = 1 'Get the orders for Next day"
+            l_DateShift = 1 'Get orders for the Next day"
         End If
 
         l_File = pFileName & DateAdd(DateInterval.Day, l_DateShift, Date.Today).ToString("yyyy-MM-dd") & pExt
@@ -3990,7 +3334,7 @@ Public Class WCMOrdering
                 param.Direction = Data.ParameterDirection.Input
                 param.Value = pDateShift
 
-                If pSummary OrElse _SUPPLIER_ID = My.Settings.Johal_SUPPL_ID Then
+                If pSummary OrElse _SUPPLIER_ID = My.Settings.Johal_SUPPL_ID OrElse _SUPPLIER_ID = My.Settings.Freshways_SUPPL_ID Then
                     param = .Parameters.Add("@ShowProdDesc", SqlDbType.Bit)
                     param.Direction = Data.ParameterDirection.Input
                     param.Value = 1
@@ -4007,7 +3351,7 @@ Public Class WCMOrdering
                 If pSummary Then
                     With sw
                         Select Case _SUPPLIER_ID
-                            Case My.Settings.Broadland_SUPPL_ID, My.Settings.MillsMilk_SUPPL_ID ''BFS1 - Broadland Food Service,Fresh Pastures
+                            Case My.Settings.Broadland_SUPPL_ID, My.Settings.MillsMilk_SUPPL_ID, My.Settings.Freshways_SUPPL_ID
                                 .WriteLine("Serving_code,Site_name,DeliveryDate,OrderNo,Code,Product,qty")
                                 For Each row In dt.Rows
                                     .WriteLine(row(0) & "," & row(6) & "," & row(1) & "," & row(2) & "," & row(3) & "," & row(4) & "," & row(5))
@@ -4030,8 +3374,11 @@ Public Class WCMOrdering
                                 For Each row In dt.Rows
                                     .WriteLine(row(0) & "," & row(5) & "," & row(1) & "," & row(2) & "," & row(3) & "," & row(4))
                                 Next
-                            'Case My.Settings.Chew_Valley_SUPPL_ID ' 224513559  ''CHEW1 - Chew Valley Dairy
-                           '    Return ToJson(pFileName, dt)
+                            Case My.Settings.Freshways_SUPPL_ID
+                                .WriteLine("Serving_code,Site_name,DeliveryDate,OrderNo,Code,Product,qty")
+                                For Each row In dt.Rows
+                                    .WriteLine(row(0) & "," & row(6) & "," & row(1) & "," & row(2) & "," & row(3) & "," & row(4) & "," & row(5))
+                                Next
                             Case My.Settings.Johal_SUPPL_ID
                                 .WriteLine("Serving_code,DeliveryDate,OrderNo,Code,Product,qty")
                                 For Each row In dt.Rows
@@ -4271,8 +3618,6 @@ Public Class WCMOrdering
                     If _Status.StartsWith("MODIFIED") Then
                         _EmailServiceMessage(Date.Now & " ORDER Processed: " & _Status & " " & _OrderNum & " {" & _OrderRequestId & "} for " & _AccNum & vbNewLine & vbNewLine & lResponseMsg)
                     End If
-                    System.Threading.Thread.Sleep(50)
-                    EmailOrder(lNewOrderID)
                     Return MsgBoxResult.Ok
                 Case Else
                     _Status = "REJECTED"
@@ -4300,7 +3645,6 @@ Public Class WCMOrdering
 #End Region
 
 #Region "Supporting Functions --------------------------------------------------------------"
-
     Private Function GetOrderLines() As DataTable
         Dim l_DB = New DB
         Dim cmd As SqlClient.SqlCommand = Nothing
@@ -4381,7 +3725,7 @@ Public Class WCMOrdering
         Try
             l_DB.Open()
 
-            cmd = New SqlClient.SqlCommand("UPDATE P2P_order_headers set p2h_acknowledgement_datetime = GETDATE() WHERE p2h_record_id = @record_id", l_DB.Connection)
+            cmd = New SqlClient.SqlCommand("UPDATE P2P_order_headers SET p2h_acknowledgement_datetime = GETDATE() WHERE p2h_record_id = @record_id", l_DB.Connection)
             cmd.CommandTimeout = 6000
             cmd.Parameters.AddWithValue("@record_id", _OrderRequestId)
 
@@ -4435,9 +3779,8 @@ Public Class WCMOrdering
         If _eventId_Common > 99 Then _eventId_Common = 1 Else _eventId_Common += 1
         Return _eventId_Common
     End Function
-
     Private Function GetEventID() As Integer
-        Select Case COrderHeader.BuyerSequence
+        Select Case BuyerSequence
             Case 0, 1000
                 ' NOTE: eventId 500 reserved to PushEmailWEBAPP; 999 - to PushEmailP2P
                 If _eventId_Order_Upload > 998 Then _eventId_Order_Upload = 101 Else _eventId_Order_Upload += 1
@@ -4471,26 +3814,20 @@ Public Class WCMOrdering
             Case 98
                 If _eventId_DN_Grahams > 54999 Then _eventId_DN_Grahams = 50001 Else _eventId_DN_Grahams += 1
                 Return _eventId_DN_Grahams
-            Case 14
-                If _eventId_Poundland > 59999 Then _eventId_Poundland = 55001 Else _eventId_Poundland += 1
-                Return _eventId_Poundland
-            Case COrderHeader.BuyerSeq.CaffeNero_6
+
+            Case BuyerSeq.CaffeNero_6
                 If _eventId_CN_CSV > 64999 Then _eventId_CN_CSV = 60001 Else _eventId_CN_CSV += 1
                 Return _eventId_CN_CSV
-            Case COrderHeader.BuyerSeq.Zupa_16
+            Case BuyerSeq.Zupa_16
                 If _eventId_Zupa > 9999 Then _eventId_CN_CSV = 1001 Else _eventId_Zupa += 1
                 Return _eventId_Zupa
-            Case COrderHeader.BuyerSeq.McColls_18
+            Case BuyerSeq.McColls_18
                 If _eventId_McColls > 14999 Then _eventId_McColls = 10001 Else _eventId_McColls += 1
                 Return _eventId_McColls
-            Case COrderHeader.BuyerSeq.Weezy_19
+            Case BuyerSeq.Weezy_19
                 ' max for  Int32 =65535
                 If _eventId_Weezy > 65534 Then _eventId_Weezy = 65001 Else _eventId_Weezy += 1
                 Return _eventId_Weezy
-            Case 500
-                Return 500 ' fixed
-            Case 999
-                Return 999 ' fixed
             Case Else
                 If _eventId_Common > 99 Then _eventId_Common = 1 Else _eventId_Common += 1
                 Return _eventId_Common
@@ -4499,7 +3836,7 @@ Public Class WCMOrdering
 
     Private Function GetSetting_Foodbuy_Online() As Boolean
         Try
-            COrderHeader.BuyerSequence = COrderHeader.BuyerSeq.FoodBuy_Online_8
+            BuyerSequence = BuyerSeq.FoodBuy_Online_8
             If My.Settings.Switch_FoodBuyOnline = 0 Then ' switched off
                 _ORDER_IN = String.Empty
                 _ORDER_ARCHIVED = String.Empty
@@ -4532,11 +3869,9 @@ Public Class WCMOrdering
         Return False
     End Function
 
-
-
     Private Function GetSetting_Bourne() As Boolean
         Try
-            COrderHeader.BuyerSequence = COrderHeader.BuyerSeq.BourneLeisure_11
+            BuyerSequence = BuyerSeq.BourneLeisure_11
             If My.Settings.Switch_Bourne = 0 Then ' switched off
                 _ORDER_IN = String.Empty
                 _ORDER_ARCHIVED = String.Empty
@@ -4571,7 +3906,7 @@ Public Class WCMOrdering
 
     Private Function GetSetting_Interserve_saffron() As Boolean
         Try
-            COrderHeader.BuyerSequence = COrderHeader.BuyerSeq.Interserve_12
+            BuyerSequence = BuyerSeq.Interserve_12
             If My.Settings.Switch_Interserve_Saffron = 0 Then ' switched off
                 _ORDER_IN = String.Empty
                 _ORDER_ARCHIVED = String.Empty
@@ -4606,7 +3941,7 @@ Public Class WCMOrdering
 
     Private Function GetSetting_CN_CrunchTime() As Boolean
         Try
-            COrderHeader.BuyerSequence = COrderHeader.BuyerSeq.CaffeNero_6
+            BuyerSequence = BuyerSeq.CaffeNero_6
             If My.Settings.Switch_CN_CrunchTime = 0 Then ' switched off
                 _ORDER_IN = String.Empty
                 _ORDER_ARCHIVED = String.Empty
@@ -4639,51 +3974,9 @@ Public Class WCMOrdering
         Return False
     End Function
 
-
-    Private Function GetSetting_PushEmail(pType As String) As Boolean
-        Try
-
-            _ORDER_IN = String.Empty
-            _ORDER_ARCHIVED = String.Empty
-            _ORDER_FAILED = String.Empty
-            _RESPONSE_OUT = String.Empty
-            _RESPONSE_ARCHIVED = String.Empty
-
-            Select Case pType.ToUpper
-                Case "P2P"
-                    COrderHeader.BuyerSequence = COrderHeader.BuyerSeq.PushEmailP2P_999
-                    If My.Settings.Switch_PushEmailP2P = 0 Then
-                        Return False
-                    ElseIf My.Settings.Switch_PushEmailP2P = 1 Then ' test
-                        _Test_Mode = True
-                        Return True
-                    ElseIf My.Settings.Switch_PushEmailP2P = 2 Then
-                        _Test_Mode = False
-                        Return True
-                    End If
-                Case "WEBAPP"
-                    COrderHeader.BuyerSequence = COrderHeader.BuyerSeq.PushEmailWebApp_500
-                    If My.Settings.Switch_PushEmailWebApp = 0 Then
-                        Return False
-                    ElseIf My.Settings.Switch_PushEmailWebApp = 1 Then ' test
-                        _Test_Mode = True
-                        Return True
-                    ElseIf My.Settings.Switch_PushEmailWebApp = 2 Then
-                        _Test_Mode = False
-                        Return True
-                    End If
-            End Select
-
-        Catch ex As Exception
-            MyEventLog.WriteEntry("ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString, EventLogEntryType.Error, GetEventID)
-            _EmailServiceMessage(Date.Now & " " & "ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString, True)
-        End Try
-        Return False
-    End Function
-
     Private Function GetSetting_DN_Grahams() As Boolean
         Try
-            COrderHeader.BuyerSequence = COrderHeader.BuyerSeq.DN_Grahams_98
+            BuyerSequence = BuyerSeq.DN_Grahams_98
             If My.Settings.Switch_DN_Grahams = 0 Then ' switched off
                 _ORDER_IN = String.Empty
                 _ORDER_ARCHIVED = String.Empty
@@ -4713,10 +4006,9 @@ Public Class WCMOrdering
         End Try
         Return False
     End Function
-
     Private Function GetSetting_Johal() As Boolean
         Try
-            COrderHeader.BuyerSequence = COrderHeader.BuyerSeq.Order_Upload_1000
+            BuyerSequence = BuyerSeq.Order_Upload_1000
             If My.Settings.Switch_Johal = 0 Then ' switched off
                 _ORDER_OUT = String.Empty
                 _ORDER_IN = String.Empty
@@ -4744,9 +4036,39 @@ Public Class WCMOrdering
         End Try
         Return False
     End Function
+    Private Function GetSetting_Freshways() As Boolean
+        Try
+            BuyerSequence = BuyerSeq.Order_Upload_1000
+            If My.Settings.Switch_Freshways = 0 Then ' switched off
+                _ORDER_OUT = String.Empty
+                _ORDER_IN = String.Empty
+                _ORDER_ARCHIVED = String.Empty
+                _SUPPLIER_ID = 0
+            ElseIf My.Settings.Switch_Freshways = 1 Then ' test
+                _ORDER_OUT = My.Settings.Freshways_OUT
+                _ORDER_IN = String.Empty
+                _ORDER_ARCHIVED = My.Settings.Freshways_ARCHIVE
+                _SUPPLIER_ID = My.Settings.Freshways_SUPPL_ID
+                _Test_Mode = True
+                Return True
+            ElseIf My.Settings.Switch_Freshways = 2 Then 'production
+                _ORDER_OUT = My.Settings.Freshways_OUT
+                _ORDER_IN = String.Empty
+                _ORDER_ARCHIVED = My.Settings.Freshways_ARCHIVE
+                _SUPPLIER_ID = My.Settings.Freshways_SUPPL_ID
+                _Test_Mode = False
+                Return True
+            End If
+
+        Catch ex As Exception
+            MyEventLog.WriteEntry("ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString, EventLogEntryType.Error, GetEventID)
+            _EmailServiceMessage(Date.Now & " " & "ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString, True)
+        End Try
+        Return False
+    End Function
     Private Function GetSetting_Grahams() As Boolean
         Try
-            COrderHeader.BuyerSequence = COrderHeader.BuyerSeq.Order_Upload_1000
+            BuyerSequence = BuyerSeq.Order_Upload_1000
             If My.Settings.Switch_Grahams = 0 Then ' switched off
                 _ORDER_OUT = String.Empty
                 _ORDER_IN = String.Empty
@@ -4775,10 +4097,9 @@ Public Class WCMOrdering
         Return False
     End Function
 
-
     Private Function GetSetting_DairyData_MillsMilk() As Boolean
         Try
-            COrderHeader.BuyerSequence = COrderHeader.BuyerSeq.Order_Upload_1000
+            BuyerSequence = BuyerSeq.Order_Upload_1000
             If My.Settings.Switch_DairyData_MillsMilk = 0 Then ' switched off
                 _ORDER_OUT = String.Empty
                 _ORDER_IN = String.Empty
@@ -4787,14 +4108,14 @@ Public Class WCMOrdering
             ElseIf My.Settings.Switch_DairyData_MillsMilk = 1 Then ' test
                 _ORDER_OUT = My.Settings.DairyData_MillsMilk_OUT
                 _ORDER_IN = String.Empty
-                _ORDER_ARCHIVED = My.Settings.DairyData_MillsMilk_Archive
+                _ORDER_ARCHIVED = My.Settings.DairyData_MillsMilk_ARCHIVE
                 _SUPPLIER_ID = My.Settings.MillsMilk_SUPPL_ID
                 _Test_Mode = True
                 Return True
             ElseIf My.Settings.Switch_DairyData_MillsMilk = 2 Then 'production
                 _ORDER_OUT = My.Settings.DairyData_MillsMilk_OUT
                 _ORDER_IN = String.Empty
-                _ORDER_ARCHIVED = My.Settings.DairyData_MillsMilk_Archive
+                _ORDER_ARCHIVED = My.Settings.DairyData_MillsMilk_ARCHIVE
                 _SUPPLIER_ID = My.Settings.MillsMilk_SUPPL_ID
                 _Test_Mode = False
                 Return True
@@ -4808,7 +4129,7 @@ Public Class WCMOrdering
     End Function
     Private Function GetSetting_AllanReeder() As Boolean
         Try
-            COrderHeader.BuyerSequence = COrderHeader.BuyerSeq.Order_Upload_1000
+            BuyerSequence = BuyerSeq.Order_Upload_1000
             If My.Settings.Switch_AllanReeder = 0 Then ' switched off
                 _ORDER_OUT = String.Empty
                 _ORDER_IN = String.Empty
@@ -4839,7 +4160,7 @@ Public Class WCMOrdering
 
     Private Function GetSetting_DairyData_Paynes() As Boolean
         Try
-            COrderHeader.BuyerSequence = COrderHeader.BuyerSeq.Order_Upload_1000
+            BuyerSequence = BuyerSeq.Order_Upload_1000
             If My.Settings.Switch_Paynes = 0 Then ' switched off
                 _ORDER_OUT = String.Empty
                 _ORDER_IN = String.Empty
@@ -4870,7 +4191,7 @@ Public Class WCMOrdering
 
     Private Function GetSetting_DairyData_Broadland() As Boolean
         Try
-            COrderHeader.BuyerSequence = COrderHeader.BuyerSeq.Order_Upload_1000
+            BuyerSequence = BuyerSeq.Order_Upload_1000
             If My.Settings.Switch_Broadland = 0 Then ' switched off
                 _ORDER_OUT = String.Empty
                 _ORDER_IN = String.Empty
@@ -4901,7 +4222,7 @@ Public Class WCMOrdering
 
     Private Function GetSetting_JJWilson() As Boolean
         Try
-            COrderHeader.BuyerSequence = COrderHeader.BuyerSeq.Order_Upload_1000
+            BuyerSequence = BuyerSeq.Order_Upload_1000
             If My.Settings.Switch_JJWilson = 0 Then ' switched off
                 _ORDER_OUT = String.Empty
                 _ORDER_IN = String.Empty
@@ -4933,15 +4254,15 @@ Public Class WCMOrdering
     Private Function Wrap_Result(p_Result As MsgBoxResult, p_file As String, p_IsDetailedLog As Boolean, Optional p_DontMove As Boolean = False) As Boolean
         Try
             If p_Result = MsgBoxResult.Ok Then
-                If COrderHeader.BuyerSequence = COrderHeader.BuyerSeq.DN_Grahams_98 Then
+                If BuyerSequence = BuyerSeq.DN_Grahams_98 Then
                     MyEventLog.WriteEntry("DELIVERY NOTE PROCESSED:  " & _DeliveryNoteNum & " for " & _AccNum, EventLogEntryType.Information, GetEventID)
                     _EmailServiceMessage(Date.Now & " DELIVERY NOTE PROCESSED:  " & _DeliveryNoteNum & " for " & _AccNum)
-                ElseIf COrderHeader.BuyerSequence = COrderHeader.BuyerSeq.Order_Upload_1000 Then
+                ElseIf BuyerSequence = BuyerSeq.Order_Upload_1000 Then
                     MyEventLog.WriteEntry("ORDER FILE GENERATED :  " & p_file, EventLogEntryType.Information, GetEventID)
                     'If p_IsDetailedLog Then
                     _EmailServiceMessage(Date.Now & " ORDER FILE GENERATED :  " & p_file)
                     'End If
-                ElseIf COrderHeader.BuyerSequence = COrderHeader.BuyerSeq.McColls_18 Then
+                ElseIf BuyerSequence = BuyerSeq.McColls_18 Then
                     If p_IsDetailedLog Then
                         MyEventLog.WriteEntry("ORDER FILE PROCESSED :  " & p_file, EventLogEntryType.Information, GetEventID)
                         _EmailServiceMessage(Date.Now & " ORDER FILE PROCESSED :  " & p_file)
@@ -4961,17 +4282,17 @@ Public Class WCMOrdering
                     End If
                 End If
 
-                If COrderHeader.BuyerSequence = COrderHeader.BuyerSeq.Order_Upload_1000 AndAlso Not (Directory.Exists(_ORDER_IN)) Then
+                If BuyerSequence = BuyerSeq.Order_Upload_1000 AndAlso Not (Directory.Exists(_ORDER_IN)) Then
                     If Not String.IsNullOrEmpty(_ORDER_ARCHIVED) AndAlso Directory.Exists(_ORDER_ARCHIVED) Then
                         FileCopy(_ORDER_OUT & "\" & p_file, _ORDER_ARCHIVED & "\" & p_file)
                     End If
                 End If
 
             ElseIf p_Result = MsgBoxResult.Retry Then
-                If COrderHeader.BuyerSequence = COrderHeader.BuyerSeq.DN_Grahams_98 Then
+                If BuyerSequence = BuyerSeq.DN_Grahams_98 Then
                     MyEventLog.WriteEntry("DELIVERY NOTE FAILED: " & _DeliveryNoteNum & ". NEXT ATTEMPT IN " & My.Settings.TimerInterval / 1000 & " SECONDS", EventLogEntryType.Warning, GetEventID)
                     _EmailServiceMessage(Date.Now & " DELIVERY NOTE FAILED: " & _DeliveryNoteNum & ". NEXT ATTEMPT IN " & My.Settings.TimerInterval / 1000 & " SECONDS", True)
-                ElseIf COrderHeader.BuyerSequence = COrderHeader.BuyerSeq.Order_Upload_1000 Then
+                ElseIf BuyerSequence = BuyerSeq.Order_Upload_1000 Then
                     MyEventLog.WriteEntry("ORDER FILE FAILED TO GENERATE :  " & p_file, EventLogEntryType.Warning, GetEventID)
                     _EmailServiceMessage(Date.Now & " ORDER FILE FAILED TO GENERATE :  " & p_file, True)
                 Else
@@ -4980,7 +4301,7 @@ Public Class WCMOrdering
                 End If
                 Return False
             Else  ' MsgBoxResult.Abort 
-                If COrderHeader.BuyerSequence <> COrderHeader.BuyerSeq.Order_Upload_1000 Then
+                If BuyerSequence <> BuyerSeq.Order_Upload_1000 Then
                     If File.Exists(_ORDER_IN & "\" & p_file) Then
                         MoveFile(_ORDER_IN & "\" & p_file, _ORDER_FAILED & "\" & p_file)
                     End If
@@ -4995,18 +4316,6 @@ Public Class WCMOrdering
         Return False
     End Function
 
-    Public Function sDate(ByVal dDate As Object, Optional ByVal sSeparator As String = " ") As String
-        ' Return date in correct format for SQL string
-        If IsDate(dDate) Then
-
-            'System.Threading.Thread.CurrentThread.CurrentCulture = New System.Globalization.CultureInfo("en-GB", True)
-            'System.Threading.Thread.CurrentThread.CurrentUICulture = New System.Globalization.CultureInfo("en-GB", True)
-
-            Return DateAndTime.Day(dDate) & sSeparator & MonthName(Month(dDate), True) & sSeparator & Year(dDate)
-        Else
-            Return dDate.ToString
-        End If
-    End Function
 
 #End Region
 
@@ -5015,568 +4324,10 @@ Public Class WCMOrdering
 
     End Sub
 
-    Private Sub mOrder_Report_Error(pErrMsg As String) Handles mOrder.Report_Error
-        MyEventLog.WriteEntry(pErrMsg, EventLogEntryType.Error, GetEventID)
-        _EmailServiceMessage(Date.Now & pErrMsg, True)
-    End Sub
-
 #End Region
 
 #Region "Emailing --------------------------------------------------------------"
-
-    Private Function EmailOrder(ByVal pOrderID As Integer, Optional ByVal pFileAttachemnt As ArrayList = Nothing, Optional ByVal pStaticNotes As String = "") As Boolean
-        Dim lTextAttachments As Dictionary(Of String, System.Text.StringBuilder) _
-        , lTestEmail As String = "" 'My.Settings.OrderTo 
-        Dim lOrderInfo As String = String.Empty
-
-        Try
-            mOrder = New COrderHeader(pOrderID, COrderHeader.BuyerSequence = COrderHeader.BuyerSeq.PushEmailWebApp_500)
-            If mOrder Is Nothing Then
-                MyEventLog.WriteEntry("ERROR: Failed to retrieve Order ID = " & pOrderID.ToString & " Buyer " & COrderHeader.BuyerSeq.PushEmailWebApp_500.ToString & " in " & _MeName & ".EmailOrder", EventLogEntryType.Error, GetEventID)
-                _EmailServiceMessage(Date.Now & " ERROR: Failed to retrieve Order ID = " & pOrderID.ToString & " Buyer " & COrderHeader.BuyerSeq.PushEmailWebApp_500.ToString & " in " & _MeName & ".EmailOrder", True)
-                Return False
-            End If
-
-            If mOrder.EDIOrdersFlag Then
-                ' commented out by VS on 27/09/2023 - applies to any depot with edi flag on
-                'If mOrder.SupplierID = My.Settings.Grahams_SUPPL_ID OrElse mOrder.SupplierID_Produce = My.Settings.Grahams_SUPPL_ID _
-                '        OrElse mOrder.SupplierID = My.Settings.Johal_SUPPL_ID OrElse mOrder.SupplierID = My.Settings.MillsMilk_SUPPL_ID Then
-                Return True
-                'End If
-            End If
-
-            lOrderInfo = "Order Number: " & mOrder.OrderNum & " for " & mOrder.CustAcc.Trim & " delivery " & sDate(mOrder.DeliveryDate)
-            If _Test_Mode Then
-                lOrderInfo = "TEST" & lOrderInfo
-            End If
-            If pStaticNotes <> "" Then
-                mOrder.Notes += pStaticNotes
-            End If
-            mOrder.GetProductCodes()
-            If mOrder.TotalQty = 0 Then
-                MyEventLog.WriteEntry("Zero Product Quantity. " & lOrderInfo, EventLogEntryType.Warning, GetEventID)
-                _EmailServiceMessage(Date.Now & " " & "ERROR: Zero Product Quantity. " & lOrderInfo, True)
-                Return False
-            Else
-                If mOrder.ProduceItems.Count > 0 AndAlso mOrder.DepotId_Produce <> 0 Then
-                    If mOrder.HOId = 245739642 OrElse mOrder.HOId = 245740000 OrElse mOrder.Depot.Contains("Hovis") Then 'ISS1 and ISS2
-                        'Add this line in the notes for all ISS sites
-                        mOrder.Notes = "</br></br></br> ---- PLEASE SUPPLY ONLY THE ABOVE. THE ORDER MUST NOT BE INCREASED OR AMENDED WITHOUT AUTHORISATION FROM WEST COUNTRY MILK LTD ---- </br></br>---- IF POSSIBLE PLEASE INCLUDE PURCHASE ORDER REFFERENCE ON DELIVERY NOTE----</br></br>"
-                        mOrder.Notes &= "<b style='color:red;'>---- IMPORTANT ALLERGEN CONTROL - No Brand Substitutes Allowed on Bread Products ----</b></br></br>"
-                    End If
-                    lTextAttachments = PrepareOrderHTML(mOrder, "", , True)
-                    If Not lTextAttachments Is Nothing Then
-                        If _Test_Mode Then
-                            If String.IsNullOrEmpty(lTestEmail) Then lTestEmail = "victor@wcmilk.co.uk"
-                            If _EmailOrder(mOrder, lTestEmail, "", pFileAttachemnt, lTextAttachments, True, mOrder.ServingAccNum_Produce) Then
-                                mOrder.UpdateDateEmailed(Now, True)
-                                MyEventLog.WriteEntry(lOrderInfo & " emailed To: " & lTestEmail, EventLogEntryType.Information, GetEventID)
-                            End If
-                        Else
-                            If _EmailOrder(mOrder, mOrder.DepotEmail_Produce, mOrder.DepotAltEmail_Produce, pFileAttachemnt, lTextAttachments, , mOrder.ServingAccNum_Produce) Then
-                                mOrder.UpdateDateEmailed(Now, True)
-                                MyEventLog.WriteEntry(lOrderInfo & " emailed To: " & mOrder.DepotEmail_Produce & " Cc: " & mOrder.DepotAltEmail_Produce, EventLogEntryType.Information, GetEventID)
-                                '_EmailServiceMessage(Date.Now & " " & "Order Number: " & _OrderNum & " for " & _AccNum & " emailed To: " & mOrder.DepotEmail_Produce & " Cc: " & mOrder.DepotAltEmail_Produce)
-                            End If
-                        End If
-                    End If
-                End If
-                If mOrder.MilkItems.Count > 0 OrElse mOrder.DepotId_Produce = 0 Then
-                    If mOrder.HOId = 160973922 OrElse mOrder.HOId = 160974269 OrElse mOrder.HOId = 160974511 Then
-                        'Add this line in the notes for all interserve site
-                        mOrder.Notes = If(mOrder.Notes.Contains("</br></br></br>---- PLEASE SUPPLY ONLY RED TRACTOR MILK FOR THIS SITE ---- </br> </br>---- PLEASE SUPPLY ONLY THE ABOVE. THE ORDER MUST NOT BE INCREASED OR AMENDED WITHOUT AUTHORISATION FROM WEST COUNTRY MILK LTD ---- </br></br>---- IF POSSIBLE PLEASE INCLUDE PURCHASE ORDER REFFERENCE ON DELIVERY NOTE----</br></br>"), mOrder.Notes, mOrder.Notes + "</br></br></br>---- PLEASE SUPPLY ONLY RED TRACTOR MILK FOR THIS SITE ---- </br></br> ---- PLEASE SUPPLY ONLY THE ABOVE. THE ORDER MUST NOT BE INCREASED OR AMENDED WITHOUT AUTHORISATION FROM WEST COUNTRY MILK LTD ---- </br></br>---- IF POSSIBLE PLEASE INCLUDE PURCHASE ORDER REFFERENCE ON DELIVERY NOTE----</br></br>")
-                    ElseIf mOrder.HOId = 245739642 OrElse mOrder.HOId = 245740000 OrElse mOrder.Depot.Contains("Hovis") Then 'ISS1 and ISS2
-                        'Add this line in the notes for all ISS sites
-                        mOrder.Notes = "</br></br></br> ---- PLEASE SUPPLY ONLY THE ABOVE. THE ORDER MUST NOT BE INCREASED OR AMENDED WITHOUT AUTHORISATION FROM WEST COUNTRY MILK LTD ---- </br></br>---- IF POSSIBLE PLEASE INCLUDE PURCHASE ORDER REFFERENCE ON DELIVERY NOTE----</br></br>"
-                        mOrder.Notes &= "<b style='color:red;'>---- IMPORTANT ALLERGEN CONTROL - No Brand Substitutes Allowed on Bread Products ----</b></br></br>"
-                    End If
-                    lTextAttachments = PrepareOrderHTML(mOrder, "")
-                    If Not lTextAttachments Is Nothing Then
-                        If _Test_Mode Then
-                            If String.IsNullOrEmpty(lTestEmail) Then lTestEmail = "victor@wcmilk.co.uk"
-                            If _EmailOrder(mOrder, lTestEmail, "", pFileAttachemnt, lTextAttachments, True, mOrder.ServingAccNum) Then
-                                mOrder.UpdateDateEmailed(Now)
-                                MyEventLog.WriteEntry(lOrderInfo & " emailed To: " & lTestEmail, EventLogEntryType.Information, GetEventID)
-                            End If
-                        Else
-                            If _EmailOrder(mOrder, mOrder.DepotEmail, mOrder.DepotAltEmail, pFileAttachemnt, lTextAttachments, , mOrder.ServingAccNum) Then
-                                'If mOrder.BuyingGroupID = 217 Then
-                                '    'strip time part to indicate that order has not been emailed to depot but redirected to "orders@wcmilk.co.uk"
-                                '    mOrder.UpdateDateEmailed(Now.Date)
-                                'Else
-                                mOrder.UpdateDateEmailed(Now)
-                                'End If
-
-                                MyEventLog.WriteEntry(lOrderInfo & " emailed To: " & mOrder.DepotEmail & " Cc: " & mOrder.DepotAltEmail, EventLogEntryType.Information, GetEventID)
-                                '_EmailServiceMessage(Date.Now & " " & "Order Number: " & _OrderNum & " for " & _AccNum & " emailed To: " &  mOrder.DepotEmail & " Cc: " & mOrder.DepotAltEmail)
-                            End If
-                        End If
-                    End If
-                End If
-            End If
-
-
-            Return True
-
-        Catch ex As Exception
-            MyEventLog.WriteEntry("ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString, EventLogEntryType.Error, GetEventID)
-            _EmailServiceMessage(Date.Now & " " & "ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString & vbNewLine & lOrderInfo, True)
-        Finally
-            mOrder = Nothing
-        End Try
-
-        Return False
-    End Function
-
-    Private Function EmailStandingOrder(ByVal pOrderID As Integer) As Boolean
-        Dim lTextAttachments As Dictionary(Of String, System.Text.StringBuilder) _
-        , lTestEmail As String = My.Settings.OrderTo _
-        , lOrderInfo As String = String.Empty
-
-        Try
-            mOrder = New COrderHeader()
-            mOrder.RetrieveStandingOrder(pOrderID)
-            mOrder.IsStandingOrder = True
-
-            lOrderInfo = "Standing Order Number: " & mOrder.OrderNum & " for " & mOrder.CustAcc.Trim
-            If mOrder.IsSOCancelled Then
-                lOrderInfo &= " Cancelled"
-                mOrder.Notes = "STANDING ORDER HAS BEEN CANCELLED WITH EFFECT FROM " & mOrder.SOLastDeliveryDate.ToString("ddd dd MMM yyyy")
-            ElseIf mOrder.IsSuspended Then
-                lOrderInfo &= " Suspended"
-                mOrder.Notes = "STANDING ORDER HAS BEEN SUSPENDED WITH EFFECT FROM " & mOrder.DateEffective.ToString("ddd dd MMM yyyy")
-            End If
-
-            lTextAttachments = PrepareStandingOrderHTML(mOrder)
-            If Not lTextAttachments Is Nothing Then
-                If _Test_Mode Then
-                    If String.IsNullOrEmpty(lTestEmail) Then lTestEmail = "victor@wcmilk.co.uk"
-                    If _EmailOrder(mOrder, lTestEmail, "", Nothing, lTextAttachments, True) Then
-                        mOrder.UpdateDateEmailed(Now)
-                        MyEventLog.WriteEntry("TEST " & lOrderInfo & " emailed To: " & lTestEmail, EventLogEntryType.Information, GetEventID)
-                        Return True
-                    End If
-                Else
-                    If _EmailOrder(mOrder, mOrder.DepotEmail, mOrder.DepotAltEmail, Nothing, lTextAttachments) Then
-
-                        mOrder.UpdateDateEmailed(Now)
-
-                        MyEventLog.WriteEntry(lOrderInfo & " emailed To: " & mOrder.DepotEmail & " Cc: " & mOrder.DepotAltEmail, EventLogEntryType.Information, GetEventID)
-                        '_EmailServiceMessage(Date.Now & " " & "Order Number: " & _OrderNum & " for " & _AccNum & " emailed To: " & mOrder.DepotEmail & " Cc: " & mOrder.DepotAltEmail)
-                        Return True
-                    End If
-                End If
-            End If
-
-            mOrder = Nothing
-
-        Catch ex As Exception
-            MyEventLog.WriteEntry("ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString, EventLogEntryType.Error, GetEventID)
-            _EmailServiceMessage(Date.Now & " " & "ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString & vbNewLine & lOrderInfo, True)
-        End Try
-        Return False
-    End Function
-
-    Private Function _EmailOrder(ByVal pOrder As COrderHeader, ByVal pTo As String, ByVal pCc As String, ByVal pExcelAttachments As ArrayList, ByVal pTextAttachments As Dictionary(Of String, System.Text.StringBuilder) _
-                            , Optional ByVal pTest As Boolean = False, Optional pServingCode As String = "") As Boolean
-        Dim oMessage As MailMessage
-        Dim idx As Integer
-        Dim sTest As String = " "
-        Dim sGreeting As String = "Good Afternoon,"
-        Dim astrCCs As String() = My.Settings.OrderTo.Split(";")
-        Dim lSubject As String = "<!>"
-        Dim lCHandCo As String = ""
-        Try
-            If String.IsNullOrEmpty(pTo) Then Return False
-
-            If Now.Hour < 12 Then
-                sGreeting = "Good Morning,"
-            ElseIf Now.Hour > 17 Then
-                sGreeting = "Good Evening,"
-            End If
-
-            If pTest Then
-                sTest = "TEST - PLEASE IGNORE  "
-            End If
-
-            'If pOrder.EDIOrdersFlag AndAlso Not pOrder.IsStandingOrder Then
-            '    sTest &= " (Depot set up for EDI Ordering)"
-            '    pTo = "sentorders@wcmilk.co.uk"
-            'End If
-
-            'If pOrder.BuyingGroupID = 217 Then
-            '    'redirect CH&Co orders
-            '    lCHandCo = "CH & CO "
-            '    pTo = "orders@wcmilk.co.uk"
-            '    pCc = ""
-            'End If
-
-            oMessage = New MailMessage()
-            lSubject = lCHandCo & pOrder.Customer & " \ " & If(pServingCode = "", pOrder.ServingAccNum, pServingCode) & "  To: " & pTo & "  Cc: " & pCc
-
-            With oMessage
-                If pTo.IndexOf("@") > -1 Then
-                    .To.Add(New MailAddress(pTo))
-                    '.To.Add(New MailAddress("daniel@wcmilk.co.uk"))
-                    If pCc.IndexOf("@") > -1 Then
-                        .CC.Add(New MailAddress(pCc))
-                    End If
-                ElseIf pCc.IndexOf("@") > -1 Then
-                    .To.Add(New MailAddress(pCc))
-                End If
-
-                If pTest Then
-                    For Each sWCM_Cc As String In astrCCs
-                        If sWCM_Cc.IndexOf("@") > -1 Then
-                            .CC.Add(New MailAddress(sWCM_Cc))
-                        End If
-                    Next
-                Else
-                    If pOrder.EDIOrdersFlag = False Then
-                        .Bcc.Add(New MailAddress("sentorders@wcmilk.co.uk"))
-                    End If
-                End If
-
-                If My.Settings.orderfrom <> "" Then
-                    .From = New MailAddress(My.Settings.orderfrom)
-                Else
-                    .From = New MailAddress("orders@wcmilk.co.uk")
-                    ' .From = New MailAddress(modCurrentUser.Email)
-                End If
-
-                If pOrder.IsStandingOrder Then
-                    If pOrder.IsSOCancelled Then
-                        .Subject = sTest & "CANCELLED Standing Order ref. " & pOrder.OrderNum & " for  " & pOrder.Customer & " \ " & If(pServingCode = "", pOrder.ServingAccNum, pServingCode) & "  effective from " & DateAdd(DateInterval.Day, 1, pOrder.SOLastDeliveryDate).ToString("ddd dd MMM yyyy")
-                        .Body = sTest & vbNewLine & vbNewLine & "Please CANCEL Standing Order below: " & vbNewLine & vbNewLine
-                    ElseIf pOrder.IsSuspended Then
-                        .Subject = sTest & "SUSPENDED Standing Order ref. " & pOrder.OrderNum & " for  " & pOrder.Customer & " \ " & If(pServingCode = "", pOrder.ServingAccNum, pServingCode) & "  effective from " & pOrder.DateEffective.ToString("ddd dd MMM yyyy")
-                        .Body = sTest & vbNewLine & vbNewLine & "Please SUSPEND Standing Order below: " & vbNewLine & vbNewLine
-                    Else
-                        .Subject = sTest & "Standing Order ref. " & pOrder.OrderNum & " for  " & pOrder.Customer & " \ " & If(pServingCode = "", pOrder.ServingAccNum, pServingCode) & "  effective from " & pOrder.DateEffective.ToString("ddd dd MMM yyyy")
-                        If Nz(Of Date)(pOrder.SOLastDeliveryDate, Date.MinValue) <> Date.MinValue Then
-                            .Subject &= " to " & pOrder.SOLastDeliveryDate.ToString("ddd dd MMM yyyy")
-                        End If
-                        .Body = sTest & vbNewLine & vbNewLine & "Please see Standing Order below: " & vbNewLine & vbNewLine
-                    End If
-                Else
-                    If pOrder.IsSoAmendment Then
-                        .Subject = sTest & "Amended Order for  " & pOrder.Customer & " \ " & If(pServingCode = "", pOrder.ServingAccNum, pServingCode) & "  delivery date " & pOrder.DeliveryDate.ToString("ddd dd MMM yyyy")
-                        .Body = sTest & vbNewLine & vbNewLine & "Please see Amended Order below (for this delivery date only): " & vbNewLine & vbNewLine
-                    Else
-                        .Subject = sTest & "Order for " & pOrder.Customer & " \ " & If(pServingCode = "", pOrder.ServingAccNum, pServingCode) & " \ " & pOrder.DeliveryDate.ToString("ddd dd MMM yyyy")
-                        .Body = sTest & vbNewLine & sGreeting & vbNewLine & vbNewLine & "Please find Order for Delivery Date " &
-                                pOrder.DeliveryDate.ToString("ddd dd MMM yyyy") & " for:  " & vbNewLine & vbNewLine
-                    End If
-                End If
-
-                lSubject = .Subject
-
-                If Not pTextAttachments Is Nothing Then
-                    For Each lTextAttachment As KeyValuePair(Of String, System.Text.StringBuilder) In pTextAttachments
-                        '.Body &= vbNewLine & lTextAttachment.Key & vbNewLine
-                        .Body &= vbNewLine
-                        .Body &= "</pre>" & lTextAttachment.Value.ToString & "<pre>" & vbNewLine
-                    Next
-                End If
-
-                .Body &= vbNewLine & "If you have any queries please contact us on the number below." & vbNewLine
-                .Body &= vbNewLine
-                .Body &= "Regards," & vbNewLine
-                .Body &= vbNewLine
-                .Body &= "West Country Milk" & vbNewLine & vbNewLine
-                .Body &= "Otter Building" & vbNewLine
-                .Body &= "Grenadier Road" & vbNewLine
-                .Body &= "Exeter Business Park" & vbNewLine
-                .Body &= "Devon" & vbNewLine
-                .Body &= "EX1 3QF" & vbNewLine
-                .Body &= "Tel. 01392 350000" & vbNewLine & vbNewLine
-
-                .IsBodyHtml = True
-                .Body = "<html><body><pre>" & .Body & "</pre></body></html>"
-
-                If Not pExcelAttachments Is Nothing Then
-                    For idx = 0 To pExcelAttachments.Count - 1
-                        If System.IO.File.Exists(pExcelAttachments(idx).ToString) Then
-                            'creating an instance of MailAttachment class and specifying the location of attachment
-                            'adding the attachment to mailMessage  
-                            .Attachments.Add(New Attachment(pExcelAttachments(idx).ToString))
-                        End If
-                    Next idx
-                End If
-            End With
-
-            Dim oSMTP As New SmtpClient()
-
-            'oSMTP.Host  defined in app.config<system.net><mailSettings> section
-            'oSMTP.DeliveryMethod = SmtpDeliveryMethod.Network
-            'oSMTP.DeliveryMethod = SmtpDeliveryMethod.PickupDirectoryFromIis
-
-            'oSMTP.UseDefaultCredentials = False
-            'oSMTP.Credentials = New System.Net.NetworkCredential("WCMAdmin", "M1lkAdm1nP@55!") '("WCMApplication", "M1lkyW4y!")
-
-            lSubject &= " a)"
-
-            oSMTP.UseDefaultCredentials = True
-            lSubject &= " b)"
-            oSMTP.Send(oMessage)
-
-            lSubject &= " c)"
-
-            Return True
-
-        Catch ex As SmtpFailedRecipientsException
-            MyEventLog.WriteEntry("ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString & " 1: " & lSubject, EventLogEntryType.Error, GetEventID)
-        Catch ex As SmtpFailedRecipientException
-            MyEventLog.WriteEntry("ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString & " 2: " & lSubject, EventLogEntryType.Error, GetEventID)
-        Catch ex As SmtpException
-            MyEventLog.WriteEntry("ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString & " 3: " & lSubject, EventLogEntryType.Error, GetEventID)
-        Catch ex As Exception
-            MyEventLog.WriteEntry("ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString & " 4: " & lSubject, EventLogEntryType.Error, GetEventID)
-        Finally
-            oMessage = Nothing
-        End Try
-        Return False
-    End Function
-
-    Private Function PrepareOrderHTML(ByVal pOrder As COrderHeader, ByVal pBDProductsOnly As String, Optional ByVal pIsAmendment As Boolean = False, Optional pIsProduce As Boolean = False) As Dictionary(Of String, System.Text.StringBuilder)
-        Dim lTextAttachments As New Dictionary(Of String, System.Text.StringBuilder) _
-        , lEmailBody As New System.Text.StringBuilder _
-        , idx As Integer _
-        , lOrderList As List(Of COrderDetail) = pOrder.MilkItems _
-        , oLine As COrderDetail _
-        , lSign As String = "" _
-        , lShowSupplierCodes As Boolean = pOrder.ShowProductCodes_Supplier
-
-        If pIsProduce Then
-            lOrderList = pOrder.ProduceItems
-            lShowSupplierCodes = pOrder.ShowProductCodes_Supplier_Produce
-        End If
-        With lEmailBody
-            .Append("<table cellpadding=""1"" cellspacing=""1"" border=""0"">")
-            .Append("<tr>")
-            .Append("<td> Order Number:   ") : .Append("</td>")
-            .Append("<td>") : .Append(pOrder.OrderNum) : .Append("</td>")
-            .Append("</tr>")
-            .Append("<tr>")
-            .Append("<td> Supplier Acct Nos:   ") : .Append("</td>")
-            .Append("<td>")
-            If (pIsProduce) Then .Append(pOrder.ServingAccNum_Produce) Else .Append(pOrder.ServingAccNum)
-            .Append("</td>")
-            .Append("</tr>")
-            .Append("<tr>")
-            .Append("<td> Site name:   ") : .Append("</td>")
-            .Append("<td>") : .Append(pOrder.Customer) : .Append(",  ").Append(pOrder.Address1) : .Append("</td>")
-            .Append("</tr>")
-            .Append("<tr>")
-            .Append("<td> PostCode:   ") : .Append("</td>")
-            .Append("<td>") : .Append(pOrder.Postcode) : .Append("</td>")
-            .Append("</tr>")
-            .Append("<tr>")
-            .Append("</tr>")
-            .Append("<tr>")
-            .Append("<td>  Delivery Date:   ") : .Append("</td>")
-            .Append("<td>") : .Append(pOrder.DeliveryDate.ToString("ddd dd MMM yyyy")) : .Append("</td>")
-            .Append("</tr>")
-            .Append("</table>")
-        End With
-        lTextAttachments.Add("header", lEmailBody)
-
-        If lOrderList.Count > 0 Then
-            lEmailBody = New System.Text.StringBuilder
-            With lEmailBody
-                .Append("<table cellpadding=""1"" cellspacing=""1"" border=""1"">")
-                .Append("<tr>")
-                If lShowSupplierCodes Then
-                    .Append("<td nowrap=""nowrap"">Code</td>")
-                End If
-                .Append("<td nowrap=""nowrap"">Product</td>")
-                If pIsAmendment Then
-                    .Append("<td nowrap=""nowrap"" align=""center"">Standing Order</td>")
-                    .Append("<td nowrap=""nowrap"" align=""center"">Amendment</td>")
-                    .Append("<td nowrap=""nowrap"" align=""center"">Quantity</td>")
-                Else
-                    .Append("<td nowrap=""nowrap"" align=""center"">Quantity</td>")
-                End If
-
-                .Append("</tr>")
-
-                For idx = 0 To lOrderList.Count - 1
-                    oLine = DirectCast(lOrderList.Item(idx), COrderDetail)
-                    If pBDProductsOnly = "BD" Then
-                        If oLine.ProductId < 5385 OrElse oLine.ProductId > 5388 Then
-                            'exclude all products except BD1000 BD1001 BD1002 BD1003 which are delivered by particular supplier
-                            Continue For
-                        End If
-                    ElseIf oLine.ProductId >= 5385 AndAlso oLine.ProductId <= 5388 Then
-                        'exclude products BD1000 BD1001 BD1002 BD1003 as they are delivered by particular supplier
-                        Continue For
-                    End If
-
-                    If oLine.ProductId = 6056 OrElse oLine.ProductId = 6314 OrElse oLine.ProductId = 6315 Then 'AndAlso Not (pOrder.DepotId = 129 OrElse pOrder.DepotId = 341 OrElse pOrder.DepotId = 369 OrElse pOrder.DepotId = 371) Then 'For all depots bar Wells Farm
-                        'exclude product WCM Delivery Charge 
-                        Continue For
-                    End If
-
-                    If pIsAmendment Then
-                        .Append("<tr>")
-                        If lShowSupplierCodes Then
-                            If String.IsNullOrEmpty(oLine.ProductCode_Supplier) Then
-                                .Append("<td>") : .Append("</td>")
-                                .Append("<td>" & oLine.Product) : .Append("</td>")
-                            Else
-                                .Append("<td>" & oLine.ProductCode_Supplier) : .Append("</td>")
-                                .Append("<td>" & oLine.Product_Supplier) : .Append("</td>")
-                            End If
-                        Else
-                            .Append("<td>" & oLine.Product) : .Append("</td>")
-                        End If
-                        .Append("<td nowrap=""nowrap"" align=""center"">" & CType(oLine.SOQty, Int16)).ToString() : .Append("</td>")
-                        If oLine.Qty - oLine.SOQty > 0 Then lSign = "+" Else lSign = ""
-                        .Append("<td nowrap=""nowrap"" align=""center"">" & lSign & CType(oLine.Qty - oLine.SOQty, Int16)).ToString() : .Append("</td>")
-                        .Append("<td nowrap=""nowrap"" align=""center"">" & CType(oLine.Qty, Int16)).ToString() : .Append("</td>")
-                        .Append("</tr>")
-                    ElseIf oLine.Qty <> 0 Then
-                        .Append("<tr>")
-                        If lShowSupplierCodes Then
-                            If String.IsNullOrEmpty(oLine.ProductCode_Supplier) Then
-                                .Append("<td>") : .Append("</td>")
-                                .Append("<td>" & oLine.Product) : .Append("</td>")
-                            Else
-                                .Append("<td>" & oLine.ProductCode_Supplier) : .Append("</td>")
-                                .Append("<td>" & oLine.Product_Supplier) : .Append("</td>")
-                            End If
-                        Else
-                            .Append("<td>" & oLine.Product) : .Append("</td>")
-                        End If
-                        .Append("<td nowrap=""nowrap"" align=""center"">" & CType(oLine.Qty, Int16)).ToString() : .Append("</td>")
-                        .Append("</tr>")
-                    End If
-                Next
-                .Append("</table>")
-            End With
-            lTextAttachments.Add("details", lEmailBody)
-        End If
-
-        If pOrder.OrderNum.StartsWith("WCMWA") AndAlso lOrderList.Count > 0 AndAlso pOrder.Notes.Contains("cancel") Then
-            pOrder.Notes = ""
-        End If
-        If pOrder.Notes <> "" Then
-            lEmailBody = New System.Text.StringBuilder
-            With lEmailBody
-                .Append("<table cellpadding=""1"" cellspacing=""1"" border=""0"">")
-                .Append("<tr>")
-                .Append("<td>" & pOrder.Notes) : .Append("</td>")
-                .Append("</tr>")
-                .Append("</table>")
-            End With
-
-            lTextAttachments.Add("notes", lEmailBody)
-        End If
-        Return lTextAttachments
-    End Function
-
-
-    Private Function PrepareStandingOrderHTML(ByVal pStandingOrder As COrderHeader) As Dictionary(Of String, System.Text.StringBuilder)
-        Dim lTextAttachments As New Dictionary(Of String, System.Text.StringBuilder)
-        Dim lHeader As New System.Text.StringBuilder
-        Dim lDetail As System.Text.StringBuilder
-        Dim lNote As System.Text.StringBuilder
-        Dim idx As Integer
-        Dim oLine As COrderDetail
-
-
-        With lHeader
-            .Append("<table cellpadding=""1"" cellspacing=""1"" border=""0"">")
-            .Append("<tr>")
-            .Append("<td> Supplier Acct No:    ") : .Append("</td>")
-            .Append("<td>") : .Append(pStandingOrder.ServingAccNum) : .Append("</td>")
-            .Append("</tr>")
-            .Append("<tr>")
-            .Append("<td> Site name:   ") : .Append("</td>")
-            .Append("<td>") : .Append(pStandingOrder.Customer) : .Append(",  ").Append(pStandingOrder.Address1) : .Append("</td>")
-            .Append("</tr>")
-            .Append("<tr>")
-            .Append("<td> PostCode:   ") : .Append("</td>")
-            .Append("<td>") : .Append(pStandingOrder.Postcode) : .Append("</td>")
-            .Append("</tr>")
-            .Append("<tr>")
-            If Not pStandingOrder.IsSOCancelled Then
-                If Nz(Of Date)(pStandingOrder.SOLastDeliveryDate, Date.MinValue) <> Date.MinValue Then
-                    .Append("<td>  Dates Effective:  ") : .Append("</td>")
-                    .Append("<td>") : .Append(pStandingOrder.DateEffective.ToString("ddd dd MMM yyyy")) : .Append(" - ") : .Append(pStandingOrder.SOLastDeliveryDate.ToString("ddd dd MMM yyyy")) : .Append("</td>")
-                Else
-                    .Append("<td>  Date Effective:   ") : .Append("</td>")
-                    .Append("<td>") : .Append(pStandingOrder.DateEffective.ToString("ddd dd MMM yyyy")) : .Append("</td>")
-                End If
-            End If
-            .Append("</tr>")
-            .Append("<tr>")
-            .Append("<td>") : .Append(" ") : .Append("</td>")
-            .Append("</tr>")
-            .Append("</table>")
-        End With
-        lTextAttachments.Add("header", lHeader)
-
-        lHeader = New System.Text.StringBuilder
-        With lHeader
-            .Append("<table cellpadding=""1"" cellspacing=""1"" border=""0"">")
-            .Append("<tr>")
-            .Append("<td> Standing Order:   ") : .Append(pStandingOrder.OrderNum) : .Append("</td>")
-            .Append("</tr>")
-            .Append("</table>")
-        End With
-        lTextAttachments.Add("header2", lHeader)
-
-
-        If pStandingOrder.Count > 0 AndAlso Not mOrder.IsSOCancelled AndAlso Not mOrder.IsSuspended Then
-            lDetail = New System.Text.StringBuilder
-            With lDetail
-                .Append("<table cellpadding=""1"" cellspacing=""1"" border=""1"">")
-                .Append("<tr>")
-                .Append("<td nowrap=""nowrap"">Product</td>")
-                .Append("<td nowrap=""nowrap"" align=""center"">Sun</td>")
-                .Append("<td nowrap=""nowrap"" align=""center"">Mon</td>")
-                .Append("<td nowrap=""nowrap"" align=""center"">Tue</td>")
-                .Append("<td nowrap=""nowrap"" align=""center"">Wed</td>")
-                .Append("<td nowrap=""nowrap"" align=""center"">Thu</td>")
-                .Append("<td nowrap=""nowrap"" align=""center"">Fri</td>")
-                .Append("<td nowrap=""nowrap"" align=""center"">Sat</td>")
-                .Append("</tr>")
-
-                For idx = 0 To pStandingOrder.Count - 1
-                    oLine = DirectCast(pStandingOrder.Item(idx), COrderDetail)
-                    .Append("<tr>")
-                    .Append("<td>" & oLine.Product) : .Append("</td>")
-                    .Append("<td nowrap=""nowrap"" align=""center"">" & CType(oLine.Sun, Int16)).ToString() : .Append("</td>")
-                    .Append("<td nowrap=""nowrap"" align=""center"">" & CType(oLine.Mon, Int16)).ToString() : .Append("</td>")
-                    .Append("<td nowrap=""nowrap"" align=""center"">" & CType(oLine.Tue, Int16)).ToString() : .Append("</td>")
-                    .Append("<td nowrap=""nowrap"" align=""center"">" & CType(oLine.Wed, Int16)).ToString() : .Append("</td>")
-                    .Append("<td nowrap=""nowrap"" align=""center"">" & CType(oLine.Thu, Int16)).ToString() : .Append("</td>")
-                    .Append("<td nowrap=""nowrap"" align=""center"">" & CType(oLine.Fri, Int16)).ToString() : .Append("</td>")
-                    .Append("<td nowrap=""nowrap"" align=""center"">" & CType(oLine.Sat, Int16)).ToString() : .Append("</td>")
-                    .Append("</tr>")
-                Next
-                .Append("</table>")
-            End With
-            lTextAttachments.Add("details", lDetail)
-        End If
-
-        If pStandingOrder.Notes <> "" Then
-            lNote = New System.Text.StringBuilder
-            With lNote
-                .Append("<table cellpadding=""1"" cellspacing=""1"" border=""0"">")
-                .Append("<tr>")
-                .Append("<td>" & pStandingOrder.Notes) : .Append("</td>")
-                .Append("</tr>")
-                .Append("</table>")
-            End With
-
-            lTextAttachments.Add("notes", lNote)
-        End If
-        Return lTextAttachments
-    End Function
-
-    Private Function _EmailServiceMessage(ByVal pMessage As String, Optional ByVal pError As Boolean = False) As Boolean
+    Private Function _EmailServiceMessage(ByVal pMessage As String, Optional ByVal pError As Boolean = False, Optional pToOverride As String = "") As Boolean
         Dim oMessage As MailMessage
         Dim sTest As String = " ", sError As String = " "
         Try
@@ -5594,13 +4345,17 @@ Public Class WCMOrdering
 
             oMessage = New MailMessage()
             With oMessage
-                For Each sWCM_To As String In astrTo
-                    If sWCM_To.IndexOf("@") > -1 Then
-                        .To.Add(New MailAddress(sWCM_To))
+                If pToOverride = "" Then
+                    For Each sWCM_To As String In astrTo
+                        If sWCM_To.IndexOf("@") > -1 Then
+                            .To.Add(New MailAddress(sWCM_To))
+                        End If
+                    Next
+                    If .To.Count = 0 Then
+                        .To.Add(New MailAddress("victor@wcmilk.co.uk"))
                     End If
-                Next
-                If .To.Count = 0 Then
-                    .To.Add(New MailAddress("victor@wcmilk.co.uk"))
+                Else
+                    .To.Add(New MailAddress("victor@wcmilk./co.uk"))
                 End If
 
                 If _Test_Mode Then
@@ -5610,7 +4365,7 @@ Public Class WCMOrdering
                         End If
                     Next
                 End If
-                If pError AndAlso COrderHeader.BuyerSequence = COrderHeader.BuyerSeq.Order_Upload_1000 Then
+                If pError AndAlso BuyerSequence = BuyerSeq.Order_Upload_1000 Then
                     .CC.Add(New MailAddress("naomi@wcmilk.co.uk"))
                     .CC.Add(New MailAddress("katie@wcmilk.co.uk"))
                 End If
@@ -5777,170 +4532,7 @@ Public Class WCMOrdering
         Return False
     End Function
 
-
 #End Region
 
-
-#Region "Email WEBAPP Orders "
-
-    Private Function GetOrdersNotEmailed() As Boolean
-        Dim l_DB As DB = Nothing _
-        , Cmd As SqlClient.SqlCommand = Nothing _
-        , Param As SqlClient.SqlParameter _
-        , Rdr As SqlClient.SqlDataReader = Nothing _
-        , lSupplier As Integer = 0
-
-        Try
-            If COrderHeader.BuyerSequence = COrderHeader.BuyerSeq.PushEmailWebApp_500 Then
-                lSupplier = 500
-            ElseIf COrderHeader.BuyerSequence = COrderHeader.BuyerSeq.PushEmailP2P_999 Then
-                lSupplier = 999
-            Else
-                Return False
-            End If
-            _Orders_ToEmail = New Stack(Of Integer)
-            l_DB = New DB
-            l_DB.Open()
-
-            Cmd = New SqlClient.SqlCommand("p_bulk_orders_get", l_DB.Connection)
-            With Cmd
-                .CommandType = CommandType.StoredProcedure
-                'Create Parameters
-                Param = .Parameters.Add("@order_batch", SqlDbType.VarChar, 20)
-                Param.Value = DBNull.Value
-
-                Param = .Parameters.Add("@supplier", SqlDbType.Int)
-                Param.Value = lSupplier
-
-                Param = .Parameters.Add("@order_date", SqlDbType.Date)
-                Param.Value = Now.Date
-
-                Rdr = .ExecuteReader()
-            End With
-
-            With Rdr
-                If .HasRows Then
-                    Do While .Read
-                        _Orders_ToEmail.Push(CType(Rdr("order_id"), Integer))
-                    Loop
-                End If
-                .Close()
-            End With
-            Cmd.Dispose()
-            l_DB.Close()
-            Return True
-
-        Catch ex As Exception
-            MyEventLog.WriteEntry("ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString, EventLogEntryType.Error, GetEventID)
-            _EmailServiceMessage(Date.Now & " " & "ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString, True)
-        Finally
-
-        End Try
-        Return False
-    End Function
-
-    Private Function GetStandingNotEmailed() As Boolean
-        Dim l_DB As DB = Nothing _
-        , Cmd As SqlClient.SqlCommand = Nothing _
-        , Rdr As SqlClient.SqlDataReader = Nothing _
-        , lSupplier As Integer = 0
-
-        Try
-
-            _SO_ToEmail = New Stack(Of Integer)
-            l_DB = New DB
-            l_DB.Open()
-
-            Cmd = New SqlClient.SqlCommand("p_bulk_email_so_get", l_DB.Connection)
-            With Cmd
-                .CommandType = CommandType.StoredProcedure
-                'No Parameters
-
-                Rdr = .ExecuteReader()
-            End With
-
-            With Rdr
-                If .HasRows Then
-                    Do While .Read
-                        _SO_ToEmail.Push(CType(Rdr("order_id"), Integer))
-                    Loop
-                End If
-                .Close()
-            End With
-            Cmd.Dispose()
-            l_DB.Close()
-            Return True
-
-        Catch ex As Exception
-            MyEventLog.WriteEntry("ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString, EventLogEntryType.Error, GetEventID)
-            _EmailServiceMessage(Date.Now & " " & "ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString, True)
-        Finally
-
-        End Try
-        Return False
-    End Function
-
-    Private Function PushEmailOrders() As Integer '' ByRef pFailedCount As Integer, Optional ByVal bTest As Boolean = False) As Integer
-        Dim lEmailsSent As Integer = 0 _
-        , lFailedOrders As New Stack(Of Integer) _
-        , lOrderId As Integer
-
-        Try
-
-            Do While _Orders_ToEmail.Count > 0
-                lOrderId = _Orders_ToEmail.Pop
-                If EmailOrder(lOrderId) Then
-                    lEmailsSent += 1
-                Else
-                    lFailedOrders.Push(lOrderId)
-                End If
-                System.Threading.Thread.Sleep(100)
-            Loop
-
-            '  pFailedCount = lFailedOrders.Count
-
-
-            Return lEmailsSent
-
-        Catch ex As Exception
-            MyEventLog.WriteEntry("ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString, EventLogEntryType.Error, GetEventID)
-            _EmailServiceMessage(Date.Now & " " & "ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString, True)
-        Finally
-
-        End Try
-        Return False
-    End Function
-
-    Private Function PushEmailStandingOrders() As Integer
-        Dim lEmailsSent As Integer = 0 _
-        , lFailedOrders As New Stack(Of Integer) _
-        , lOrderId As Integer
-
-        Try
-
-            Do While _SO_ToEmail.Count > 0
-                lOrderId = _SO_ToEmail.Pop
-                If EmailStandingOrder(lOrderId) Then
-                    lEmailsSent += 1
-                Else
-                    lFailedOrders.Push(lOrderId)
-                End If
-                System.Threading.Thread.Sleep(100)
-            Loop
-
-            '  pFailedCount = lFailedOrders.Count
-
-
-            Return lEmailsSent
-
-        Catch ex As Exception
-            MyEventLog.WriteEntry("ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString, EventLogEntryType.Error, GetEventID)
-            _EmailServiceMessage(Date.Now & " " & "ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString, True)
-        Finally
-
-        End Try
-        Return False
-    End Function
-#End Region
 
 End Class

@@ -15,6 +15,7 @@
 
     Public Property IsProduce As Boolean
     Public Property SupplyingDepotID As Long
+    Public Property ServingCode As String
     Public Property TypeID As Long
     ''--------------------------------------------
     Public Property DeliveryNoteNum As String

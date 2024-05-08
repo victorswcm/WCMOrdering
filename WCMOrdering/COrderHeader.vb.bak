@@ -55,9 +55,10 @@ Public Class COrderHeader
     Private _ASNSent As Boolean = False
     Private _RestrictedSalesGroup As String = Nothing
 
-    Private _DepotId As Integer = 0
+    Public DepotList As List(Of CDepot)
+	Public DepotId As Long = 0
     Private _Depot As String = Nothing
-    
+    Public DepotCode As String
     Private _DepotEmail As String = Nothing
     Private _DepotAltEmail As String = Nothing
     Private _DepotAltEmail2 As String = Nothing
@@ -65,8 +66,8 @@ Public Class COrderHeader
     Private _SupplierID As Long = 0
     Private _Supplier_Produce As String = Nothing
     Private _SupplierID_Produce As Long = 0
-    Private _ServingAccNum As String = Nothing
-    Private _ServingAccNum_Produce As String = Nothing
+    Private _ServingCode As String = Nothing
+    Private _ServingCode_Produce As String = Nothing
     Private _DeliveryDate As Date = Nothing
     Private _DateEffectiveSun As Date = Nothing ' SUSPENDED used for standing order (week_ending effective - 6 days)
     Private _DateEffective As Date = Nothing ' 
@@ -93,7 +94,6 @@ Public Class COrderHeader
 
     Private _DT_CutOff As DataTable
 
-    Public DepotCode As String
     Public DeliveryNoteID As Integer = 0
 
     Private _CheckIfAmendment As Boolean = False
@@ -116,7 +116,7 @@ Public Class COrderHeader
     Public Property MinValueDairyAndBread As Decimal = 0
     Public Property MinValueProduce As Decimal = 0
 
-    Private _DepotId_Produce As Integer = 0
+    Public Depot2ID As Integer = 0
     Private _Depot_Produce As String = Nothing
     Private _DepotEmail_Produce As String = Nothing
     Private _DepotAltEmail_Produce As String = Nothing
@@ -124,7 +124,7 @@ Public Class COrderHeader
     Public SLAInfo_Produce As String = String.Empty
     Private _EmailedDateTime_Produce As Date? = Nothing
     Public DepotCode_Produce As String
-
+    Public Invoice_num As String
     Private _BuyingGroupID As Integer? = Nothing
 
     Public Event Report_Error(pErrMsg As String)
@@ -143,36 +143,48 @@ Public Class COrderHeader
 
     Public Function Add(ByVal intId As Integer, ByVal bytTS As Byte(), ByVal intProductId As Integer, ByVal strCode As String, ByVal strProduct As String, ByVal decQty As Decimal, ByVal decSOQty As Decimal) As COrderDetail
         Dim oOrderLine As New COrderDetail(Me, intId, bytTS, intProductId, decQty, decSOQty, strCode, strProduct)
+		oOrderLine.Parent = Me
         List.Add(oOrderLine)
         Return oOrderLine
     End Function
 
     'items to be deleted
-    Public Sub Add(ByVal intId As Integer, ByVal bytTS As Byte())
+    Public Function Add(ByVal intId As Integer, ByVal bytTS As Byte()) As COrderDetail
         Dim oOrderLine As New COrderDetail(Me, intId, bytTS)
+        oOrderLine.Parent = Me
         List.Add(oOrderLine)
-    End Sub
+        Return oOrderLine
+    End Function
 
-    Public Sub Add(ByVal value As COrderDetail)
+    Public Function Add(ByVal value As COrderDetail) As COrderDetail
+        value.Parent = Me
         List.Add(value)
-    End Sub
+        Return value
+    End Function
 
     'used for standing orders:
-    Public Sub Add(ByVal intId As Integer, ByVal bytTS As Byte(), ByVal intProductId As Integer, ByVal strCode As String, ByVal strProduct As String,
-                   ByVal decSun As Decimal, ByVal decMon As Decimal, ByVal decTue As Decimal, ByVal decWed As Decimal, ByVal decThu As Decimal, ByVal decFri As Decimal, ByVal decSat As Decimal)
+    Public Function Add(ByVal intId As Integer, ByVal bytTS As Byte(), ByVal intProductId As Integer, ByVal strCode As String, ByVal strProduct As String,
+                   ByVal decSun As Decimal, ByVal decMon As Decimal, ByVal decTue As Decimal, ByVal decWed As Decimal, ByVal decThu As Decimal, ByVal decFri As Decimal, ByVal decSat As Decimal) As COrderDetail
 
         Dim oOrderLine As New COrderDetail(Me, intId, bytTS, intProductId, strCode, strProduct, decSun, decMon, decTue, decWed, decThu, decFri, decSat)
         List.Add(oOrderLine)
-    End Sub
-
+        Return oOrderLine
+    End Function
+    
     'remove items with id = 0 (those not in the database)
     Public Sub Clean()
-        Dim idx As Integer
 
-        For idx = Me.Count - 1 To 0 Step -1
+        For idx As Integer = Me.Count - 1 To 0 Step -1
             If DirectCast(List.Item(idx), COrderDetail).ID = 0 Then
                 List.RemoveAt(idx)
             End If
+        Next
+    End Sub
+    'remove items 
+    Public Sub ClearLines()
+
+        For idx As Integer = Me.Count - 1 To 0 Step -1
+            List.RemoveAt(idx)
         Next
     End Sub
 
@@ -181,9 +193,8 @@ Public Class COrderHeader
     End Function
 
     Public Function Contains(ByVal sProductCode As String) As Boolean
-        Dim idx As Integer
 
-        For idx = 0 To List.Count - 1
+        For idx As Integer = 0 To List.Count - 1
             If StrComp(DirectCast(List.Item(idx), COrderDetail).ProductCode, sProductCode, vbTextCompare) = 0 Then
                 Return True
             End If
@@ -192,9 +203,8 @@ Public Class COrderHeader
     End Function
 
     Public Function Exists(ByVal intProductId As Integer) As Boolean
-        Dim idx As Integer
-
-        For idx = 0 To List.Count - 1
+ 
+        For idx As Integer = 0 To List.Count - 1
             If DirectCast(List.Item(idx), COrderDetail).ProductId = intProductId Then
                 Return True
             End If
@@ -265,9 +275,8 @@ Public Class COrderHeader
     Public ReadOnly Property Is_BDProduct_Ordered As Boolean
         Get
             Dim oItem As COrderDetail
-            Dim idx As Integer
 
-            For idx = 0 To List.Count - 1
+            For idx As Integer = 0 To List.Count - 1
                 oItem = DirectCast(List.Item(idx), COrderDetail)
 
                 If oItem.ProductId >= 5385 AndAlso oItem.ProductId <= 5388 Then
@@ -286,9 +295,8 @@ Public Class COrderHeader
     Public ReadOnly Property Is_Non_BDProduct_Ordered As Boolean
         Get
             Dim oItem As COrderDetail
-            Dim idx As Integer
 
-            For idx = 0 To List.Count - 1
+            For idx As Integer = 0 To List.Count - 1
                 oItem = DirectCast(List.Item(idx), COrderDetail)
 
                 If oItem.ProductId < 5385 OrElse oItem.ProductId > 5388 Then
@@ -298,18 +306,19 @@ Public Class COrderHeader
             Return False
         End Get
     End Property
+    
     Public ReadOnly Property ShowProductCodes_Supplier As Boolean
         Get
-            'TODO - hard coded for HOV1 - Hovis Limited; need to create flag on supplier table 
-            Return SupplierID = 117621290
+            For Each dpt As CDepot In DepotList
+                'TODO - hard coded for HOV1 - Hovis Limited; need to create flag on supplier table 
+                If dpt.SupplierID = 117621290 Then
+                    Return True
+                End If
+            Next
+            Return False
         End Get
     End Property
-    Public ReadOnly Property ShowProductCodes_Supplier_Produce As Boolean
-        Get
-            'TODO - hard coded for HOV1 - Hovis Limited; need to create flag on supplier table 
-            Return SupplierID_Produce = 117621290
-        End Get
-    End Property
+    
     Public Sub Remove(ByVal Value As COrderDetail)
         If (List.Contains(Value)) Then
             List.Remove(Value)
@@ -336,30 +345,26 @@ Public Class COrderHeader
         End Get
     End Property
 
-    ' not nesesseraly milk, depends on what is set up in  depot_product lookup table for current customer
-    Public ReadOnly Property MilkItems As List(Of COrderDetail)
-        Get
-            Return GetItems(DepotId)
-        End Get
-    End Property
-    ' not nesesseraly milk, depends on what is set up in  depot_product lookup table for current customer
-    Public ReadOnly Property ProduceItems As List(Of COrderDetail)
-        Get
-            Return GetItems(DepotId_Produce)
-        End Get
-    End Property
-
-    Private Function GetItems(pDepotId As Long) As List(Of COrderDetail)
+    Public Function DepotItems(pDepotId As Long) As List(Of COrderDetail)
         Dim lList As New List(Of COrderDetail)
+        Dim lAmended As Boolean = False
 
         For Each lItem As COrderDetail In Me.List
-            If lItem.SupplyingDepotID = pDepotId Then
+            If lItem.SupplyingDepot.DepotId = pDepotId Then
+                If IsSoAmendment Then
+                    If lItem.SOQty <> lItem.Qty Then
+                        lAmended = True
+                    End If
+                End If
                 lList.Add(lItem)
             End If
         Next
+        If IsSoAmendment And Not lAmended Then
+            lList.Clear()
+        End If
         Return lList
     End Function
-
+    
 
     Public Property OrderId() As Integer
         Get
@@ -381,6 +386,9 @@ Public Class COrderHeader
 
     Public Property HOId() As Long
         Get
+            If _HOId <= 0 Then
+                GetCustomerInfo()
+            End If
             Return _HOId
         End Get
         Set(ByVal value As Long)
@@ -388,6 +396,28 @@ Public Class COrderHeader
         End Set
     End Property
 
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     Public Property Customer() As String
         Get
             If _Customer Is Nothing Then
@@ -412,39 +442,10 @@ Public Class COrderHeader
         End Set
     End Property
 
-    Public Property DepotId_Produce() As Integer
-        Get
-            Return _DepotId_Produce
-        End Get
-        Set(ByVal value As Integer)
-            _DepotId_Produce = value
-        End Set
-    End Property
-    Public Property Depot_Produce() As String
-        Get
-            If _Depot_Produce Is Nothing Then
-                GetDepotInfo(True)
-            End If
-            Return _Depot_Produce
-        End Get
-        Set(ByVal value As String)
-            _Depot_Produce = value
-        End Set
-    End Property
-
-    Public Property DepotId() As Integer
-        Get
-            Return _DepotId
-        End Get
-        Set(ByVal value As Integer)
-            _DepotId = value
-        End Set
-    End Property
-
     Public Property Depot() As String
         Get
             If _Depot Is Nothing Then
-                GetDepotInfo()
+                GetDepotInfo(1)
             End If
             Return _Depot
         End Get
@@ -468,7 +469,7 @@ Public Class COrderHeader
     Public Property DepotAltEmail() As String
         Get
             If _DepotAltEmail Is Nothing Then
-                GetDepotInfo()
+                GetDepotInfo(1)
             End If
             Return _DepotAltEmail
         End Get
@@ -476,11 +477,11 @@ Public Class COrderHeader
             _DepotAltEmail = value
         End Set
     End Property
-
+    
     Public Property DepotAltEmail2() As String
         Get
             If _DepotAltEmail2 Is Nothing Then
-                GetDepotInfo()
+                GetDepotInfo(1)
             End If
             Return _DepotAltEmail2
         End Get
@@ -489,41 +490,100 @@ Public Class COrderHeader
         End Set
     End Property
 
-    Public Property DepotEmail_Produce() As String
+     Public Property Depot2() As String
         Get
-            If _DepotEmail_Produce Is Nothing Then
-                GetDepotInfo(True)
+            If _Depot2 Is Nothing Then
+                GetDepotInfo(2)
             End If
-            Return _DepotEmail_Produce
+            Return _Depot2
         End Get
         Set(ByVal value As String)
-            _DepotEmail_Produce = value
+            _Depot2 = value
+        End Set
+    End Property
+    Public Property Depot2Email() As String
+        Get
+            If _Depot2Email Is Nothing Then
+                GetDepotInfo(2)
+            End If
+            Return _Depot2Email
+        End Get
+        Set(ByVal value As String)
+            _Depot2Email = value
         End Set
     End Property
 
-    Public Property DepotAltEmail_Produce() As String
+    Public Property Depot2AltEmail() As String
         Get
-            If _DepotAltEmail_Produce Is Nothing Then
-                GetDepotInfo(True)
+            If _Depot2AltEmail Is Nothing Then
+                GetDepotInfo(2)
             End If
-            Return _DepotAltEmail_Produce
+            Return _Depot2AltEmail
         End Get
         Set(ByVal value As String)
-            _DepotAltEmail_Produce = value
+            _Depot2AltEmail = value
         End Set
     End Property
 
-    Public Property DepotAltEmail2_Produce() As String
+    Public Property Depot2AltEmail2() As String
         Get
-            If _DepotAltEmail2_Produce Is Nothing Then
-                GetDepotInfo(True)
+            If _Depot2AltEmail2 Is Nothing Then
+                GetDepotInfo(2)
             End If
-            Return _DepotAltEmail2_Produce
+            Return _Depot2AltEmail2
         End Get
         Set(ByVal value As String)
-            _DepotAltEmail2_Produce = value
+            _Depot2AltEmail2 = value
         End Set
     End Property
+       Public Property Depot3() As String
+        Get
+            If _Depot3 Is Nothing Then
+                GetDepotInfo(3)
+            End If
+            Return _Depot3
+        End Get
+        Set(ByVal value As String)
+            _Depot3 = value
+        End Set
+    End Property
+    
+    Public Property Depot3Email() As String
+        Get
+            If _Depot3Email Is Nothing Then
+                GetDepotInfo(3)
+            End If
+            Return _Depot3Email
+        End Get
+        Set(ByVal value As String)
+            _Depot3Email = value
+        End Set
+    End Property
+
+    Public Property Depot3AltEmail() As String
+        Get
+            If _Depot3AltEmail Is Nothing Then
+                GetDepotInfo(3)
+            End If
+            Return _Depot3AltEmail
+        End Get
+        Set(ByVal value As String)
+            _Depot3AltEmail = value
+        End Set
+    End Property
+
+    Public Property Depot3AltEmail2() As String
+        Get
+            If _Depot3AltEmail2 Is Nothing Then
+                GetDepotInfo(3)
+            End If
+            Return _Depot3AltEmail2
+        End Get
+        Set(ByVal value As String)
+            _Depot3AltEmail2 = value
+        End Set
+    End Property
+    
     Public Property EDIOrdersFlag() As Boolean
         Get
             If _EDIOrdersFlag Is Nothing Then
@@ -549,7 +609,7 @@ Public Class COrderHeader
     Public Property Supplier() As String
         Get
             If _Supplier Is Nothing Then
-                GetCurrentSupplier()
+                GetCurrentSupplier(1)
             End If
             Return _Supplier
         End Get
@@ -561,7 +621,7 @@ Public Class COrderHeader
     Public Property SupplierID() As Integer
         Get
             If _SupplierID = 0 Then
-                GetCurrentSupplier()
+                GetCurrentSupplier(1)
             End If
             Return _SupplierID
         End Get
@@ -569,50 +629,88 @@ Public Class COrderHeader
             _SupplierID = value
         End Set
     End Property
-    Public Property Supplier_Produce() As String
+
+    Public Property Supplier2() As String
         Get
-            If _Supplier_Produce Is Nothing Then
-                GetCurrentSupplier(True)
+            If _Supplier2 Is Nothing Then
+                GetCurrentSupplier(2)
             End If
-            Return _Supplier_Produce
+            Return _Supplier2
         End Get
         Set(ByVal value As String)
-            _Supplier_Produce = value
+            _Supplier2 = value
         End Set
     End Property
 
-    Public Property SupplierID_Produce() As Integer
+    Public Property Supplier2ID() As Integer
         Get
-            If _SupplierID_Produce = 0 Then
-                GetCurrentSupplier(True)
+            If _Supplier2ID = 0 Then
+                GetCurrentSupplier(2)
             End If
-            Return _SupplierID_Produce
+            Return _Supplier2ID
         End Get
         Set(ByVal value As Integer)
-            _SupplierID_Produce = value
-        End Set
-    End Property
-    Public Property ServingAccNum() As String
-        Get
-            If _ServingAccNum Is Nothing Then
-                GetServingAccNum_and_SLA()
-            End If
-            Return _ServingAccNum
-        End Get
-        Set(ByVal value As String)
-            _ServingAccNum = value
+            _Supplier2ID = value
         End Set
     End Property
 
-    Public Property ServingAccNum_Produce() As String
+    Public Property Supplier3() As String
         Get
-            If _ServingAccNum_Produce Is Nothing Then
-                GetServingAccNum_and_SLA(True)
+            If _Supplier3 Is Nothing Then
+                GetCurrentSupplier(3)
             End If
-            Return _ServingAccNum_Produce
+            Return _Supplier3
         End Get
         Set(ByVal value As String)
-            _ServingAccNum_Produce = value
+            _Supplier3 = value
+        End Set
+    End Property
+
+    Public Property Supplier3ID() As Integer
+        Get
+            If _Supplier3ID = 0 Then
+                GetCurrentSupplier(3)
+            End If
+            Return _Supplier3ID
+        End Get
+        Set(ByVal value As Integer)
+            _Supplier3ID = value
+        End Set
+    End Property
+    
+    Public Property ServingCode() As String
+        Get
+            If _ServingCode Is Nothing Then
+                GetServingCode_and_SLA(1)
+            End If
+            Return _ServingCode
+        End Get
+        Set(ByVal value As String)
+            _ServingCode = value
+        End Set
+    End Property
+
+    Public Property ServingCode2() As String
+        Get
+            If _ServingCode2 Is Nothing Then
+                GetServingCode_and_SLA(2)
+            End If
+            Return _ServingCode2
+        End Get
+        Set(ByVal value As String)
+            _ServingCode2 = value
+        End Set
+    End Property
+
+    Public Property ServingCode3() As String
+        Get
+            If _ServingCode3 Is Nothing Then
+                GetServingCode_and_SLA(3)
+            End If
+            Return _ServingCode3
+        End Get
+        Set(ByVal value As String)
+            _ServingCode3 = value
         End Set
     End Property
     Public Property DateEffective() As Date
@@ -623,7 +721,6 @@ Public Class COrderHeader
             _DateEffective = value
         End Set
     End Property
-
     Public Property DateEffectiveSun() As Date
         Get
             Return _DateEffectiveSun
@@ -949,204 +1046,325 @@ Public Class COrderHeader
         End If
         Return True
     End Function
-
-    Private Sub GetCustomerInfo()
-        Dim cmd As SqlClient.SqlCommand
-        Dim dr As SqlClient.SqlDataReader
-        Dim l_DB As DB
-        Dim sbsql As New System.Text.StringBuilder
-        Try
-            If _CustomerId <> 0 Then
-                l_DB = New DB
-                l_DB.Open()
-
-                With sbsql
-                    .AppendLine("SELECT customer_account_number, isnull(SiteName,customer_account_name) customer, cu_store_number, address_line1, postcode, isnull(rsg_restricted_sales_group,'') restricted_sales_group")
-                    .AppendLine(" FROM v_customer_links  ")
-                    .AppendLine(" LEFT JOIN restricted_sales_groups ON rsg_restricted_sales_group_id = cu_restricted_sales_group_id ")
-                    .Append(" WHERE cu_sage_customer_id =  ") : .AppendLine(_CustomerId.ToString)
-
-                    cmd = New SqlClient.SqlCommand(.ToString, l_DB.Connection)
-                End With
-                dr = cmd.ExecuteReader
-                If dr.HasRows Then
-                    If dr.Read Then
-                        Me.CustAcc = dr("customer_account_number").ToString
-                        Me.Customer = dr("customer").ToString
-                        Me.StoreId = dr("cu_store_number").ToString
-                        Me.Address1 = dr("address_line1").ToString
-                        Me.Postcode = dr("postcode").ToString
-                        Me.RestrictedSalesGroup = dr("restricted_sales_group").ToString
-                    End If
-                End If
-                dr.Close()
-                l_DB.Close()
-            Else
-                _Customer = ""
-                _StoreId = ""
-            End If
-
-        Catch ex As Exception
-            RaiseEvent Report_Error("ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString)
-
-        Finally
-
-        End Try
-    End Sub
-
-    Public Sub GetDepotInfo()
-        GetDepotInfo(0)
-    End Sub
-
-    Public Sub GetDepotInfo(pIsProduce As Boolean)
-        Dim cmd As SqlClient.SqlCommand
-        Dim dr As SqlClient.SqlDataReader
-        Dim l_DB As DB
-        Dim sbsql As New System.Text.StringBuilder
-        Dim lDepotID As Integer = _DepotId
-
-        Try
-
-            If pIsProduce Then lDepotID = _DepotId_Produce
-
-            If _DepotId <> 0 Then
-                l_DB = New DB
-                l_DB.Open()
-
-                With sbsql
-                    .AppendLine("SELECT de_depot, de_code, de_email, de_alt_email, de_alt_email2, de_edi_orders")
-                    .AppendLine("FROM depots ")
-                    .Append("WHERE de_depot_id = ") : .Append(_DepotId.ToString)
-
-                    cmd = New SqlClient.SqlCommand(.ToString, l_DB.Connection)
-                End With
-                dr = cmd.ExecuteReader
-                If dr.HasRows Then
-                    If dr.Read Then
-                        If pIsProduce Then
-                            Me.Depot_Produce = dr("de_depot").ToString
-                            Me.DepotCode_Produce = Nz(Of String)(dr("de_code"), "")
-                            Me.DepotEmail_Produce = Nz(Of String)(dr("de_email"), "")
-                            Me.DepotAltEmail_Produce = Nz(Of String)(dr("de_alt_email"), "")
-                            Me.DepotAltEmail2_Produce = Nz(Of String)(dr("de_alt_email2"), "")
-                            _EDIOrdersFlag_Produce = Nz(Of Boolean)(dr("de_edi_orders"), 0)
-                        Else
-                            _Depot = dr("de_depot").ToString
-                            DepotCode = Nz(Of String)(dr("de_code"), "")
-                            _DepotEmail = If(IsDBNull(dr("de_email")), "", dr("de_email"))
-                            _DepotAltEmail = If(IsDBNull(dr("de_alt_email")), "", dr("de_alt_email"))
-                            _DepotAltEmail2 = If(IsDBNull(dr("de_alt_email2")), "", dr("de_alt_email2"))
-                            _EDIOrdersFlag = Nz(Of Boolean)(dr("de_edi_orders"), 0)
-                        End If
-
-                    End If
-                End If
-                dr.Close()
-                l_DB.Close()
-            Else
-                _Depot = ""
-                _DepotEmail = Nothing
-                _DepotAltEmail = Nothing
-                _DepotAltEmail2 = Nothing
-                _EDIOrdersFlag = Nothing
-                _EDIOrdersFlag_Produce = Nothing
-            End If
-        Catch ex As Exception
-            RaiseEvent Report_Error("ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString)
-
-        Finally
-
-        End Try
-    End Sub
-
-    Public Sub GetServingAccNum_and_SLA()
-        GetServingAccNum_and_SLA(0)
-    End Sub
-
-    Public Sub GetServingAccNum_and_SLA(pIsProduce As Boolean)
-        Dim dr As SqlClient.SqlDataReader
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    Public Sub GetCustomerDepots(pCustomerId As Long, pDeliveryDate As Date)
+        Dim dr As SqlClient.SqlDataReader = Nothing
         Dim lDB As DB
         Dim lCmd As SqlClient.SqlCommand
         Dim lParam As SqlClient.SqlParameter
-        Dim sbsql As New System.Text.StringBuilder
+        Dim lDepot As CDepot
+        Dim idx As Integer = 1
 
         Try
-            If pIsProduce AndAlso _DepotId_Produce = 0 Then
-                _ServingAccNum_Produce = ""
-                Return
-            End If
-
+            DepotList = New List(Of CDepot)
             ' If _CustomerId <> 0 Then
             lDB = New DB
             lDB.Open()
-            lCmd = New SqlClient.SqlCommand("p_serving_acc_and_sla_get", lDB.Connection)
+            lCmd = New SqlClient.SqlCommand("p_customer_depots_get", lDB.Connection)
             With lCmd
                 .CommandType = CommandType.StoredProcedure
 
                 'Create Parameters
                 lParam = .Parameters.Add("@cust_id", SqlDbType.BigInt)
-                lParam.Value = _CustomerId
+                lParam.Value = pCustomerId
 
-                lParam = .Parameters.Add("@acc_num", SqlDbType.VarChar, 60)
-                lParam.Value = _CustAcc
-
-                lParam = .Parameters.Add("@depot_id", SqlDbType.Int)
-                'add to WCMOrdering
-                If pIsProduce Then
-                    lParam.Value = _DepotId_Produce
-                Else
-                    lParam.Value = _DepotId
-                End If
-
-                lParam = .Parameters.Add("@delivery_date", SqlDbType.Date)
-                If IsNothing(_DeliveryDate) Then
-                    lParam.Value = DBNull.Value
-                Else
-                    lParam.Value = _DeliveryDate
-                End If
+                lParam = .Parameters.Add("@week_ending", SqlDbType.Date)
+                lParam.Value = ToWeekEndingDate(pDeliveryDate)
 
                 dr = .ExecuteReader()
 
                 If dr.HasRows Then
-                    dr.Read()
-                    If pIsProduce Then
-                        _ServingAccNum_Produce = Nz(Of String)(dr("serving_code"), "")
-                    Else
-                        _ServingAccNum = Nz(Of String)(dr("serving_code"), "")
+                    While dr.Read()
+                        lDepot = New CDepot(Nz(Of Integer)(dr("cpi_depot_id"), 0))
+                        lDepot.GetSupplier(pCustomerId, pDeliveryDate)
+                        lDepot.ServingCode = Nz(Of String)(dr("cpi_serving_code"), "")
+                        lDepot.CutOffDateTimeSet(pDeliveryDate)
+                        DepotList.Add(lDepot)
+                        Select Case idx
+                            Case 1
+                                DepotId = Nz(Of Integer)(dr("cpi_depot_id"), 0)
+                                ServingCode = Nz(Of String)(dr("cpi_serving_code"), "").Trim
+                            Case 2
+                                Depot2Id = Nz(Of Integer)(dr("cpi_depot_id"), 0)
+                                ServingCode2 = Nz(Of String)(dr("cpi_serving_code"), "").Trim
+                            Case 3
+                                Depot3Id = Nz(Of Integer)(dr("cpi_depot_id"), 0)
+                                ServingCode3 = Nz(Of String)(dr("cpi_serving_code"), "").Trim
+                        End Select
 
-                    End If
-
-                Else
-                    If pIsProduce Then
-                        _ServingAccNum_Produce = ""
-                    Else
-                        _ServingAccNum = ""
-                    End If
+                        idx += 1
+                    End While
                 End If
             End With
-        Catch ex As Exception
-            RaiseEvent Report_Error("ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString)
-        Finally
 
+        Catch ex As Exception
+             RaiseEvent Report_Error("ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString)
+
+        Finally
+            If dr IsNot Nothing AndAlso Not dr.IsClosed Then
+                dr.Close()
+            End If
         End Try
     End Sub
 
-    Public Sub GetCurrentSupplier()
-        GetCurrentSupplier(0)
+    
+    Private Sub GetCustomerInfo()
+        Dim dr As SqlClient.SqlDataReader = Nothing
+        Dim lDB As DB
+        Dim lCmd As SqlClient.SqlCommand
+        Dim lParam As SqlClient.SqlParameter        
+        
+        Try
+            If _CustomerId <> 0 Then
+                l_DB = New DB
+                l_DB.Open()
+	            lCmd = New SqlClient.SqlCommand("p_customer_info_get", lDB.Connection)
+	            With lCmd
+	                .CommandType = CommandType.StoredProcedure
+	
+	                'Create Parameters
+	                lParam = .Parameters.Add("@cust_id", SqlDbType.BigInt)
+	                lParam.Value = _CustomerId
+	
+	                lParam = .Parameters.Add("@acc_num", SqlDbType.VarChar, 60)
+	                lParam.Value = _CustAcc
+	
+	                lParam = .Parameters.Add("@order_id", SqlDbType.Int)
+	                lParam.Value = _OrderID
+	
+	                dr = .ExecuteReader()
+                
+	                If dr.HasRows Then
+	                    If dr.Read Then
+	                        Me.CustAcc = dr("customer_account_number").ToString
+	                        Me.Customer = dr("customer").ToString
+	                        Me.StoreId = dr("cu_store_number").ToString
+	                        Me.Address1 = dr("address_line1").ToString
+	                        Me.Postcode = dr("postcode").ToString
+	                        Me.RestrictedSalesGroup = dr("restricted_sales_group").ToString
+	                        Me.RestrictedSalesGroupID = Nz(Of Integer)(dr("cu_restricted_sales_group_id"), 0)
+	                        Me.CustomerLocationCode = Nz(Of String)(dr("customers_location_code").ToString, String.Empty)
+                    		Me.CustomerUnitCode = Nz(Of String)(dr("customers_unit_code").ToString, String.Empty)
+                    		Me.CustomerASNCode = Nz(Of String)(dr("customer_code").ToString, String.Empty)
+                    		Me.CustomerAgreementCode = Nz(Of String)(dr("agreement_code").ToString, String.Empty)
+	                    End If
+	                End If
+	                dr.Close()
+	                l_DB.Close()
+	            Else
+	                _Customer = ""
+	                _StoreId = ""
+	            End If
+			End With
+        Catch ex As Exception
+            RaiseEvent Report_Error("ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString)
+
+        Finally
+            If dr IsNot Nothing AndAlso Not dr.IsClosed Then
+                dr.Close()
+            End If
+        End Try
     End Sub
 
-    Public Sub GetCurrentSupplier(pIsProduce As Boolean)
-        Dim lCmd As SqlClient.SqlCommand
-        Dim lParam As SqlClient.SqlParameter
-        Dim lResult As Object = Nothing
-        Dim lDB As DB
-        Dim sbsql As New System.Text.StringBuilder
-        Dim lDepotID As Integer = _DepotId
+    Public Sub GetDepotInfo()
+        GetDepotInfo(1)
+    End Sub
+
+    Public Sub GetDepotInfo(pSeq As Integer)
+        Dim cmd As SqlClient.SqlCommand
+        Dim dr As SqlClient.SqlDataReader
+        Dim l_DB As DB
+        Dim lDepotID As Integer = DepotId
 
         Try
-            If pIsProduce Then
-                lDepotID = _DepotId_Produce
+           Select Case pSeq
+                Case 1 : lDepotID = DepotId
+                Case 2 : lDepotID = Depot2Id
+                Case 3 : lDepotID = Depot3Id
+            End Select
+
+
+            If lDepotId <> 0 Then
+                l_DB = New DB
+                l_DB.Open()
+
+                With New System.Text.StringBuilder
+                    .AppendLine("SELECT de_depot, de_code, de_email, de_alt_email, de_alt_email2, de_edi_orders")
+                    .AppendLine("FROM depots ")
+                    .Append("WHERE de_depot_id = ") : .Append(lDepotId.ToString)
+
+                    cmd = New SqlClient.SqlCommand(.ToString, l_DB.Connection)
+                End With
+                dr = cmd.ExecuteReader
+                If dr.HasRows Then
+                    If dr.Read Then
+                    	Select Case pSeq
+                            Case 1
+                                Me.Depot = dr("de_depot").ToString
+                                Me.DepotCode = Nz(Of String)(dr("de_code"), "")
+                                Me.DepotEmail = Nz(Of String)(dr("de_email"), "")
+                                Me.DepotAltEmail = Nz(Of String)(dr("de_alt_email"), "")
+                                Me.DepotAltEmail2 = Nz(Of String)(dr("de_alt_email2"), "")
+                                _EDIOrdersFlag = Nz(Of Boolean)(dr("de_edi_orders"), 0)
+
+                            Case 2
+                                Me.Depot2 = dr("de_depot").ToString
+                                Me.Depot2Code = Nz(Of String)(dr("de_code"), "")
+                                Me.Depot2Email = Nz(Of String)(dr("de_email"), "")
+                                Me.Depot2AltEmail = Nz(Of String)(dr("de_alt_email"), "")
+                                Me.Depot2AltEmail2 = Nz(Of String)(dr("de_alt_email2"), "")
+                                _EDIOrdersFlag_Produce = Nz(Of Boolean)(dr("de_edi_orders"), 0)
+                            Case 3
+                                Me.Depot3 = dr("de_depot").ToString
+                                Me.Depot3Code = Nz(Of String)(dr("de_code"), "")
+                                Me.Depot3Email = Nz(Of String)(dr("de_email"), "")
+                                Me.Depot3AltEmail = Nz(Of String)(dr("de_alt_email"), "")
+                                Me.Depot3AltEmail2 = Nz(Of String)(dr("de_alt_email2"), "")
+                        End Select
+
+                    End If
+                End If
+                dr.Close()
+                l_DB.Close()
+            Else
+               Select Case pSeq
+                    Case 1
+                        _Depot = ""
+                        DepotCode = ""
+                        _DepotEmail = Nothing
+                        _DepotAltEmail = Nothing
+                        _DepotAltEmail2 = Nothing
+						_EDIOrdersFlag = Nothing
+                    Case 2
+                        _Depot2 = ""
+                        Depot2Code = ""
+                        _Depot2Email = Nothing
+                        _Depot2AltEmail = Nothing
+                        _Depot2AltEmail2 = Nothing
+                        _EDIOrdersFlag_Produce = Nothing
+                    Case 3
+                        _Depot3 = ""
+                        Depot3Code = ""
+                        _Depot3Email = Nothing
+                        _Depot3AltEmail = Nothing
+                        _Depot3AltEmail2 = Nothing
+                End Select
             End If
+        Catch ex As Exception
+            RaiseEvent Report_Error("ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString)
+
+        Finally
+            If dr IsNot Nothing AndAlso Not dr.IsClosed Then
+                dr.Close()
+            End If
+        End Try
+    End Sub
+
+    
+    Public Sub GetCurrentSupplier()
+        GetCurrentSupplier(1)
+    End Sub
+
+      Public Sub GetCurrentSupplier(pSeq As Integer)
+        Dim lCmd As SqlClient.SqlCommand,
+            lParam As SqlClient.SqlParameter,
+            lResult As Object = Nothing,
+            lDB As DB,
+            Sql As String = "",
+            l_strResult As String = "",
+            lDepotID As Integer
+
+        Try
+            Select Case pSeq
+                Case 1 : lDepotID = DepotId
+                Case 2 : lDepotID = Depot2Id
+                Case 3 : lDepotID = Depot3Id
+            End Select
 
             lDB = New DB
             lDB.Open()
@@ -1186,13 +1404,12 @@ Public Class COrderHeader
 
                 lParam = .Parameters.Add("@supplier", SqlDbType.VarChar, 60)
                 lParam.Direction = ParameterDirection.InputOutput
-
-                If pIsProduce Then
-                    lParam = .Parameters.Add("@supply_type", SqlDbType.Int)
-                    lParam.Value = 2
-                Else
-                    'defaults to 1
-                End If
+                lParam.Value = 3 ' any supply type  
+                ''If pIsProduce Then
+                ''    lParam = .Parameters.Add("@supply_type", SqlDbType.Int)
+                ''Else
+                ''    'defaults to 1
+                ''End If
                 lParam = .Parameters.Add("@err_msg", SqlDbType.VarChar, -1)
                 lParam.Direction = ParameterDirection.Output
 
@@ -1200,27 +1417,39 @@ Public Class COrderHeader
 
                 'note it returns customer_price_info_id
                 Select Case .Parameters("@return").Value
-                    Case 0 'return customer_price_info_id
+                    Case 0
                         '
                     Case Is > 0
-                        If pIsProduce Then
-                            _DepotId_Produce = Nz(Of Integer)(.Parameters("@depot_id").Value, 0)
-                            _Depot_Produce = Nz(Of String)(.Parameters("@depot").Value, "")
-                            _ServingAccNum_Produce = Nz(Of String)(.Parameters("@serv_code").Value, "")
-                            _SupplierID_Produce = Nz(Of Long)(.Parameters("@supplier_id").Value, 0)
-                            _Supplier_Produce = Nz(Of String)(.Parameters("@supplier").Value, "")
-                        Else
-                            _DepotId = Nz(Of Integer)(.Parameters("@depot_id").Value, 0)
-                            _Depot = Nz(Of String)(.Parameters("@depot").Value, "")
-                            _ServingAccNum = Nz(Of String)(.Parameters("@serv_code").Value, "")
-                           _SupplierID = Nz(Of Long)(.Parameters("@supplier_id").Value, 0)
-                             _Supplier = Nz(Of String)(.Parameters("@supplier").Value, "")
-                        End If
+                        Select Case pSeq
+                            Case 1
+                                DepotId = Nz(Of Integer)(.Parameters("@depot_id").Value, 0)
+                                _Depot = Nz(Of String)(.Parameters("@depot").Value, "")
+                                _ServingCode = Nz(Of String)(.Parameters("@serv_code").Value, "")
+                                _SupplierID = Nz(Of Long)(.Parameters("@supplier_id").Value, 0)
+                                _Supplier = Nz(Of String)(.Parameters("@supplier").Value, "")
+                            Case 2
+                                'If DepotId <> Nz(Of Integer)(.Parameters("@depot_id").Value, 0) Then
+                                Depot2Id = Nz(Of Integer)(.Parameters("@depot_id").Value, 0)
+                                _Depot2 = Nz(Of String)(.Parameters("@depot").Value, "")
+                                _ServingCode2 = Nz(Of String)(.Parameters("@serv_code").Value, "")
+                                _Supplier2ID = Nz(Of Long)(.Parameters("@supplier_id").Value, 0)
+                                _Supplier2 = Nz(Of String)(.Parameters("@supplier").Value, "")
+                                'End If
+                            Case 3
+                                'If DepotId <> Nz(Of Integer)(.Parameters("@depot_id").Value, 0) Then
+                                Depot3Id = Nz(Of Integer)(.Parameters("@depot_id").Value, 0)
+                                _Depot3 = Nz(Of String)(.Parameters("@depot").Value, "")
+                                _ServingCode3 = Nz(Of String)(.Parameters("@serv_code").Value, "")
+                                _Supplier3ID = Nz(Of Long)(.Parameters("@supplier_id").Value, 0)
+                                _Supplier3 = Nz(Of String)(.Parameters("@supplier").Value, "")
+                                ' End If
+                        End Select
                     Case Else ' other errors
-                        RaiseEvent Report_Error("ERROR: " & .Parameters("@err_msg").Value & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString)
+                        MsgBox(.Parameters("@err_msg").Value, MsgBoxStyle.Information, Nz(Of String)(OrderNum, ""))
 
                 End Select
             End With
+
 
         Catch ex As Exception
             RaiseEvent Report_Error("ERROR: " & ex.Message & " in " & _MeName & "." & System.Reflection.MethodInfo.GetCurrentMethod.ToString)
@@ -1228,6 +1457,7 @@ Public Class COrderHeader
 
         End Try
     End Sub
+    
     Public Sub GetProductCodes()
         Dim dr As SqlClient.SqlDataReader = Nothing _
         , lDB As DB _
@@ -1236,7 +1466,7 @@ Public Class COrderHeader
         , oLine As COrderDetail
 
         Try
-            If ShowProductCodes_Supplier OrElse ShowProductCodes_Supplier_Produce Then
+            If ShowProductCodes_Supplier Then
                 lDB = New DB
                 lDB.Open()
                 lCmd = New SqlClient.SqlCommand("p_customer_order_product_codes_get", lDB.Connection)
@@ -1252,7 +1482,7 @@ Public Class COrderHeader
                     If dr.HasRows Then
                         While dr.Read()
                             oLine = Item(dr("product_id"), "ProductId")
-                            If Not oLine Is Nothing Then
+                            If oLine IsNot Nothing Then
                                 oLine.ProductCode_Supplier = Nz(Of String)(dr("supp_code"), "")
                                 oLine.Product_Supplier = Nz(Of String)(dr("supp_desc"), "")
                                 oLine.ProductCode_Branded = Nz(Of String)(dr("brand_code"), "")
@@ -1279,9 +1509,9 @@ Public Class COrderHeader
     'return order id found on the database - could be previous order for this customer which will be used as template to create new order 
     Private Function RetrieveOrderHeader(ByVal nOrderId? As Integer, ByVal strOrderNum As String, ByVal lngCustomerId? As Long, ByVal dtDeliveryDate As Date?, pIsAmendment As Boolean) As Integer
         Dim l_DB As New DB
-        Dim objCmd As SqlClient.SqlCommand = Nothing
+        Dim cmd As SqlClient.SqlCommand = Nothing
         Dim dr As SqlClient.SqlDataReader = Nothing
-        Dim objParam As SqlClient.SqlParameter
+        Dim param As SqlClient.SqlParameter
         Dim intOrderId As Integer ' order id found on database for the customer on the same weekday as delivery date
         Dim bIsNewOrder As Boolean
 
@@ -1289,44 +1519,44 @@ Public Class COrderHeader
 
             l_DB.Open()
 
-            objCmd = New SqlClient.SqlCommand("p_customer_order_header_get", l_DB.Connection)
-            objCmd.CommandType = CommandType.StoredProcedure
+            cmd = New SqlClient.SqlCommand("p_customer_order_header_get", l_DB.Connection)
+            cmd.CommandType = CommandType.StoredProcedure
 
             'Create Parameters
-            objParam = objCmd.Parameters.Add("@order_header_id", SqlDbType.Int)
+            Param = cmd.Parameters.Add("@order_header_id", SqlDbType.Int)
             If nOrderId Is Nothing Then
-                objParam.Value = DBNull.Value
+                Param.Value = DBNull.Value
             Else
-                objParam.Value = nOrderId
+                Param.Value = nOrderId
             End If
 
-            objParam = objCmd.Parameters.Add("@order_num", SqlDbType.VarChar, 30)
+            param = cmd.Parameters.Add("@order_num", SqlDbType.VarChar, 30)
             If String.IsNullOrEmpty(strOrderNum) Then
-                objParam.Value = DBNull.Value
+                param.Value = DBNull.Value
             Else
-                objParam.Value = strOrderNum
+                param.Value = strOrderNum
             End If
 
-            objParam = objCmd.Parameters.Add("@customer_id", SqlDbType.BigInt)
+            param = cmd.Parameters.Add("@customer_id", SqlDbType.BigInt)
             If lngCustomerId Is Nothing Then
-                objParam.Value = DBNull.Value
+                param.Value = DBNull.Value
             Else
-                objParam.Value = lngCustomerId
+                param.Value = lngCustomerId
             End If
 
-            objParam = objCmd.Parameters.Add("@delivery_date", SqlDbType.Date)
-            objParam.Direction = ParameterDirection.InputOutput
+            param = cCmd.Parameters.Add("@delivery_date", SqlDbType.Date)
+            param.Direction = ParameterDirection.InputOutput
             If dtDeliveryDate Is Nothing Then
-                objParam.Value = DBNull.Value
+                param.Value = DBNull.Value
             Else
-                objParam.Value = dtDeliveryDate
+                param.Value = dtDeliveryDate
             End If
 
-            objParam = objCmd.Parameters.Add("@IsAmendment", SqlDbType.Bit)
-            objParam.Direction = ParameterDirection.Input
-            objParam.Value = pIsAmendment
+            param = cmd.Parameters.Add("@IsAmendment", SqlDbType.Bit)
+            param.Direction = ParameterDirection.Input
+            param.Value = pIsAmendment
 
-            dr = objCmd.ExecuteReader()
+            dr = cmd.ExecuteReader()
 
             If dr.HasRows Then
                 dr.Read()
@@ -1342,7 +1572,7 @@ Public Class COrderHeader
                     DepotAltEmail = Nothing
                     DepotAltEmail2 = Nothing
                     Supplier = ""
-                    ServingAccNum = Nothing
+                    ServingCode = Nothing
                     DeliveryDate = objCmd.Parameters("@delivery_date").Value
                     Notes = ""
                     LastUpdated = Nothing
@@ -1361,15 +1591,15 @@ Public Class COrderHeader
                     DepotAltEmail2 = If(IsDBNull(dr("de_alt_email2")), Nothing, dr("de_alt_email2"))
                     Supplier = If(IsDBNull(dr("coh_supplier")), "", dr("coh_supplier"))
                     SupplierID = Nz(Of Integer)(dr("coh_supplier_id"), 0)
-                    ServingAccNum = If(IsDBNull(dr("coh_serving_acc_num")), Nothing, dr("coh_serving_acc_num"))
-                    DepotId_Produce = Nz(Of Integer)(dr("coh_depot_id_produce"), 0)
+                    ServingCode = If(IsDBNull(dr("coh_serving_acc_num")), Nothing, dr("coh_serving_acc_num"))
+                    Depot2ID = Nz(Of Integer)(dr("coh_depot_id_produce"), 0)
                     Depot_Produce = Nz(Of String)(dr("coh_depot_produce"), Nothing)
                     DepotEmail_Produce = Nz(Of String)(dr("de_email_produce"), Nothing)
                     DepotAltEmail = Nz(Of String)(dr("de_alt_email_produce"), Nothing)
                     DepotAltEmail2 = Nz(Of String)(dr("de_alt_email2_produce"), Nothing)
                     Supplier_Produce = Nz(Of String)(dr("coh_supplier_produce"), "")
                     SupplierID_Produce = Nz(Of Integer)(dr("coh_supplier_id_produce"), 0)
-                    ServingAccNum_Produce = Nz(Of String)(dr("coh_serving_acc_num_produce"), Nothing)
+                    ServingCode_Produce = Nz(Of String)(dr("coh_serving_acc_num_produce"), Nothing)
                     DeliveryDate = CType(dr("coh_delivery_date"), Date)
                     Notes = If(IsDBNull(dr("coh_notes")), "", dr("coh_notes"))
                     LastUpdated = CType(dr("coh_date_last_update"), Date)
@@ -1461,6 +1691,7 @@ Public Class COrderHeader
                         )
                     lOrdLine.SupplyingDepotID = Nz(Of Long)(dr("cod_supplying_depot_id"), DepotId)
                     lOrdLine.DeliveryNoteNum = Nz(Of String)(dr("del_note_num"), "DN_" & Me.OrderNum)
+                    lOrdLine.ServingCode = dr("serv_code")
                     'End If
                     lOrdLine.IsProduce = CType(dr("IsProduce"), Boolean)
                     lOrdLine.TypeID = CType(dr("pr_type_id"), Integer)
@@ -1526,7 +1757,7 @@ Public Class COrderHeader
                         _CustomerId = .Item("cust_id")
                         _CustAcc = Nz(Of String)(.Item("acc_num"), "")
                         DepotId = Nz(Of Integer)(.Item("depot_id"), 0)
-                        ServingAccNum = Nz(Of String)(.Item("serving_code"), "").Trim
+                        ServingCode = Nz(Of String)(.Item("serving_code"), "").Trim
                         DeliveryBreakReason = Nz(Of String)(.Item("delivery_break_reason"), "").Trim
 
                         .NextResult()
@@ -1537,6 +1768,8 @@ Public Class COrderHeader
                                 End If
                                 lOrderLine = New COrderDetail(Me, 0, Nothing, .Item("sod_product_id"), .Item("pr_code"), .Item("pr_product"), 0, 0, 0, 0, 0, 0, 0)
                                 lPrevProductID = .Item("sod_product_id")
+                                lOrderLine.SupplyingDepotID = .Item("supplying_depot_id")
+                                lOrderLine.ServingCode = .Item("serv_code")
                             End If
                             Select Case .Item("sod_wkday")
                                 Case 1 : lOrderLine.Sun = .Item("sod_qty")

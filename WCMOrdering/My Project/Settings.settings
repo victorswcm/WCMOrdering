@@ -24,7 +24,7 @@
       <Value Profile="(Default)">orders@wcmilk.co.uk</Value>
     </Setting>
     <Setting Name="orderfrom" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">orders@wcmilk.co.uk</Value>
+      <Value Profile="(Default)">victor@wcmilk.co.uk</Value>
     </Setting>
     <Setting Name="Email_Error" Type="System.String" Scope="Application">
       <Value Profile="(Default)">orders@wcmilk.co.uk</Value>
@@ -218,7 +218,7 @@
     <Setting Name="Switch_Paynes" Type="System.String" Scope="Application">
       <Value Profile="(Default)">2</Value>
     </Setting>
-    <Setting Name="Paynes_SUPPL_ID" Type="System.String" Scope="Application">
+    <Setting Name="Paynes_SUPPL_ID" Type="System.Int32" Scope="Application">
       <Value Profile="(Default)">240305512</Value>
     </Setting>
     <Setting Name="Paynes_OUT" Type="System.String" Scope="Application">
@@ -227,7 +227,7 @@
     <Setting Name="Switch_Johal" Type="System.String" Scope="Application">
       <Value Profile="(Default)">2</Value>
     </Setting>
-    <Setting Name="Johal_SUPPL_ID" Type="System.String" Scope="Application">
+    <Setting Name="Johal_SUPPL_ID" Type="System.Int32" Scope="Application">
       <Value Profile="(Default)">1188</Value>
     </Setting>
     <Setting Name="Johal_OUT" Type="System.String" Scope="Application">
@@ -236,16 +236,16 @@
     <Setting Name="Johal_ARCHIVE" Type="System.String" Scope="Application">
       <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Johal_Orders\Archive</Value>
     </Setting>
-    <Setting Name="Switch_PushEmailP2P" Type="System.String" Scope="Application">
+    <Setting Name="Switch_PushEmailP2P" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">1</Value>
+    </Setting>
+    <Setting Name="Switch_PushEmailWebApp" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">1</Value>
+    </Setting>
+    <Setting Name="Switch_Broadland" Type="System.Int32" Scope="Application">
       <Value Profile="(Default)">2</Value>
     </Setting>
-    <Setting Name="Switch_PushEmailWebApp" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">2</Value>
-    </Setting>
-    <Setting Name="Switch_Broadland" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">2</Value>
-    </Setting>
-    <Setting Name="Broadland_SUPPL_ID" Type="System.String" Scope="Application">
+    <Setting Name="Broadland_SUPPL_ID" Type="System.Int32" Scope="Application">
       <Value Profile="(Default)">118867089</Value>
     </Setting>
     <Setting Name="Broadland_OUT" Type="System.String" Scope="Application">
@@ -274,6 +274,27 @@
     </Setting>
     <Setting Name="Paynes_Archived" Type="System.String" Scope="Application">
       <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Paynes_Orders\Archive</Value>
+    </Setting>
+    <Setting Name="Saffron_ASN_hour" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">19</Value>
+    </Setting>
+    <Setting Name="Saffron_ASN_minute" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">30</Value>
+    </Setting>
+    <Setting Name="Switch_Freshways" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">2</Value>
+    </Setting>
+    <Setting Name="Freshways_SUPPL_ID" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">11711430</Value>
+    </Setting>
+    <Setting Name="Freshways_OUT" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Freshways_Orders\</Value>
+    </Setting>
+    <Setting Name="Freshways_ARCHIVE" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">\\WCM-EXE-FP01\Officeshare\Freshways_Orders\Archive</Value>
+    </Setting>
+    <Setting Name="Freshways_order_email" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">foodservice@freshways.co.uk</Value>
     </Setting>
   </Settings>
 </SettingsFile>

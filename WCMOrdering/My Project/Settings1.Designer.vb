@@ -119,7 +119,7 @@ Namespace My
         
         <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
          Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-         Global.System.Configuration.DefaultSettingValueAttribute("orders@wcmilk.co.uk")>  _
+         Global.System.Configuration.DefaultSettingValueAttribute("victor@wcmilk.co.uk")>  _
         Public ReadOnly Property orderfrom() As String
             Get
                 Return CType(Me("orderfrom"),String)
@@ -705,9 +705,9 @@ Namespace My
         <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
          Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
          Global.System.Configuration.DefaultSettingValueAttribute("240305512")>  _
-        Public ReadOnly Property Paynes_SUPPL_ID() As String
+        Public ReadOnly Property Paynes_SUPPL_ID() As Integer
             Get
-                Return CType(Me("Paynes_SUPPL_ID"),String)
+                Return CType(Me("Paynes_SUPPL_ID"),Integer)
             End Get
         End Property
         
@@ -732,9 +732,9 @@ Namespace My
         <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
          Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
          Global.System.Configuration.DefaultSettingValueAttribute("1188")>  _
-        Public ReadOnly Property Johal_SUPPL_ID() As String
+        Public ReadOnly Property Johal_SUPPL_ID() As Integer
             Get
-                Return CType(Me("Johal_SUPPL_ID"),String)
+                Return CType(Me("Johal_SUPPL_ID"),Integer)
             End Get
         End Property
         
@@ -758,37 +758,37 @@ Namespace My
         
         <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
          Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-         Global.System.Configuration.DefaultSettingValueAttribute("2")>  _
-        Public ReadOnly Property Switch_PushEmailP2P() As String
+         Global.System.Configuration.DefaultSettingValueAttribute("1")>  _
+        Public ReadOnly Property Switch_PushEmailP2P() As Integer
             Get
-                Return CType(Me("Switch_PushEmailP2P"),String)
+                Return CType(Me("Switch_PushEmailP2P"),Integer)
+            End Get
+        End Property
+        
+        <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.Configuration.DefaultSettingValueAttribute("1")>  _
+        Public ReadOnly Property Switch_PushEmailWebApp() As Integer
+            Get
+                Return CType(Me("Switch_PushEmailWebApp"),Integer)
             End Get
         End Property
         
         <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
          Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
          Global.System.Configuration.DefaultSettingValueAttribute("2")>  _
-        Public ReadOnly Property Switch_PushEmailWebApp() As String
+        Public ReadOnly Property Switch_Broadland() As Integer
             Get
-                Return CType(Me("Switch_PushEmailWebApp"),String)
-            End Get
-        End Property
-        
-        <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
-         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-         Global.System.Configuration.DefaultSettingValueAttribute("2")>  _
-        Public ReadOnly Property Switch_Broadland() As String
-            Get
-                Return CType(Me("Switch_Broadland"),String)
+                Return CType(Me("Switch_Broadland"),Integer)
             End Get
         End Property
         
         <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
          Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
          Global.System.Configuration.DefaultSettingValueAttribute("118867089")>  _
-        Public ReadOnly Property Broadland_SUPPL_ID() As String
+        Public ReadOnly Property Broadland_SUPPL_ID() As Integer
             Get
-                Return CType(Me("Broadland_SUPPL_ID"),String)
+                Return CType(Me("Broadland_SUPPL_ID"),Integer)
             End Get
         End Property
         
@@ -871,6 +871,69 @@ Namespace My
         Public ReadOnly Property Paynes_Archived() As String
             Get
                 Return CType(Me("Paynes_Archived"),String)
+            End Get
+        End Property
+        
+        <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.Configuration.DefaultSettingValueAttribute("19")>  _
+        Public ReadOnly Property Saffron_ASN_hour() As Integer
+            Get
+                Return CType(Me("Saffron_ASN_hour"),Integer)
+            End Get
+        End Property
+        
+        <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.Configuration.DefaultSettingValueAttribute("30")>  _
+        Public ReadOnly Property Saffron_ASN_minute() As Integer
+            Get
+                Return CType(Me("Saffron_ASN_minute"),Integer)
+            End Get
+        End Property
+        
+        <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.Configuration.DefaultSettingValueAttribute("2")>  _
+        Public ReadOnly Property Switch_Freshways() As Integer
+            Get
+                Return CType(Me("Switch_Freshways"),Integer)
+            End Get
+        End Property
+        
+        <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.Configuration.DefaultSettingValueAttribute("11711430")>  _
+        Public ReadOnly Property Freshways_SUPPL_ID() As Integer
+            Get
+                Return CType(Me("Freshways_SUPPL_ID"),Integer)
+            End Get
+        End Property
+        
+        <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.Configuration.DefaultSettingValueAttribute("\\WCM-EXE-FP01\Officeshare\Freshways_Orders\")>  _
+        Public ReadOnly Property Freshways_OUT() As String
+            Get
+                Return CType(Me("Freshways_OUT"),String)
+            End Get
+        End Property
+        
+        <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.Configuration.DefaultSettingValueAttribute("\\WCM-EXE-FP01\Officeshare\Freshways_Orders\Archive")>  _
+        Public ReadOnly Property Freshways_ARCHIVE() As String
+            Get
+                Return CType(Me("Freshways_ARCHIVE"),String)
+            End Get
+        End Property
+        
+        <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.Configuration.DefaultSettingValueAttribute("foodservice@freshways.co.uk")>  _
+        Public ReadOnly Property Freshways_order_email() As String
+            Get
+                Return CType(Me("Freshways_order_email"),String)
             End Get
         End Property
     End Class
